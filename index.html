@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Nsp time </title><meta name="title" content="Nsp time "><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="./style.css"><script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" async=""></script><script type="importmap">{
+  "imports": {}
+}</script></head><body>
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop Task Management Board</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        :root {
+            --board-bg: #f1f5f9; /* slate-100 */
+            --column-bg: #e2e8f0; /* slate-200 */
+            --card-bg: #ffffff;
+            --card-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+            --card-shadow-lifted: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--board-bg);
+            overflow-x: hidden; /* Prevent horizontal scroll on mobile */
+        }
+        
+        /* Desktop Kanban Board Layout (lg and up) */
+        @media (min-width: 1024px) {
+            body {
+                overflow-x: auto;
+            }
+            #board-container {
+                display: grid;
+                grid-auto-flow: column;
+                grid-auto-columns: 380px; /* A bit wider for desktop */
+                gap: 1.5rem;
+                min-height: calc(100vh - 120px);
+            }
+        }
+
+        .task-column {
+            background-color: var(--column-bg);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .column-header {
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #cbd5e1; /* slate-300 */
+        }
+        .cards-container {
+            flex-grow: 1;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .order-card {
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: var(--card-shadow);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .sub-task {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 0.75rem;
+            margin-top: 0.75rem;
+        }
+        .timer-display {
+            font-family: monospace;
+            font-weight: bold;
+            color: #4f46e5;
+            min-width: 50px;
+            display: inline-block;
+        }
+
+        /* Mobile Tab Styles */
+        .mobile-tab {
+            border-color: transparent;
+            color: #64748b; /* slate-500 */
+        }
+        .mobile-tab.active {
+            border-color: #4f46e5; /* indigo-600 */
+            color: #4f46e5;
+            font-weight: 700;
+            background-color: #eef2ff;
+        }
+        
+        .rate-input {
+            width: 60px;
+            padding: 2px 4px;
+            font-size: 0.875rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+        }
+        .rate-input:focus {
+            outline: 1px solid #4f46e5;
+        }
+
+    </style>
+<link rel="stylesheet" href="/index.css">
+
+
+
+    <div class="max-w-full">
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">Workshop Task Board</h1>
+                <p class="text-slate-500 text-sm sm:text-base">Track and time your orders from start to finish.</p>
+            </div>
+            <div class="flex items-center gap-4 w-full sm:w-auto">
+                 <div class="relative w-full sm:w-64">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+                    </div>
+                    <input type="search" id="global-search-input" placeholder="Search orders..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <a href="Admin.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 whitespace-nowrap">← Admin Panel</a>
+            </div>
+        </header>
+        
+        <!-- Mobile Tab Navigation -->
+        <div id="mobile-tabs-container" class="mb-4 border-b border-gray-200 lg:hidden overflow-x-auto">
+            <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                <button class="mobile-tab active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="pending">
+                    Pending (<span class="count">0</span>)
+                </button>
+                <button class="mobile-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="in_progress">
+                    In Progress (<span class="count">0</span>)
+                </button>
+                <button class="mobile-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="completed_today">
+                    Completed (<span class="count">0</span>)
+                </button>
+                <button class="mobile-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="time_comparison">
+                    Set Times
+                </button>
+                <button class="mobile-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="speed_check">
+                    Speed Check
+                </button>
+                 <button class="mobile-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="rate_analysis">
+                    Rate Analysis
+                </button>
+            </nav>
+        </div>
+
+        <div id="board-container" class="w-full">
+            <!-- PENDING COLUMN -->
+            <div class="task-column" data-status="pending">
+                <div class="column-header hidden lg:block">
+                    <h2 class="text-xl font-bold text-slate-700">Pending Orders (<span class="count">0</span>)</h2>
+                </div>
+                <div class="cards-container"></div>
+            </div>
+            <!-- IN PROGRESS COLUMN -->
+            <div class="task-column hidden lg:flex" data-status="in_progress">
+                <div class="column-header hidden lg:block">
+                    <h2 class="text-xl font-bold text-slate-700">In Progress (<span class="count">0</span>)</h2>
+                </div>
+                <div class="cards-container"></div>
+            </div>
+            <!-- COMPLETED COLUMN -->
+            <div class="task-column hidden lg:flex" data-status="completed_today">
+                <div class="column-header hidden lg:block">
+                    <h2 class="text-xl font-bold text-slate-700">Completed Today (<span class="count">0</span>)</h2>
+                </div>
+                <div class="cards-container"></div>
+            </div>
+        </div>
+
+        <!-- TIME COMPARISON TABLE -->
+        <div id="time-comparison-container" class="hidden w-full bg-white shadow-md rounded-lg overflow-x-auto mt-4">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Process Time</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Set ETA (mins)</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="time-comparison-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Rows will be injected by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SPEED CHECK CONTAINER -->
+        <div id="speed-check-container" class="hidden w-full space-y-6">
+            <!-- Timer Section -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold text-slate-700 mb-4">Time a New Task</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label for="task-select" class="block text-sm font-medium text-gray-700">Select Task</label>
+                        <select id="task-select" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <!-- Options will be populated here -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="task-rate-input" class="block text-sm font-medium text-gray-700">Rate (₹)</label>
+                        <input type="number" id="task-rate-input" placeholder="e.g., 50" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div class="flex items-center justify-between gap-4">
+                        <div id="sc-timer-display" class="text-4xl font-mono font-bold text-indigo-600">00:00</div>
+                        <div class="flex gap-2">
+                             <button id="sc-timer-control-btn" class="w-24 text-center bg-blue-500 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-600">Start</button>
+                             <button id="sc-timer-stop-btn" class="w-24 text-center bg-red-500 text-white font-bold py-3 px-4 rounded-md hover:bg-red-600 hidden">Stop</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Section -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                 <h2 class="text-2xl font-bold text-slate-700 mb-4">Performance Analysis</h2>
+                 
+                 <!-- Today's Logs -->
+                 <div class="mb-6">
+                     <h3 class="text-lg font-semibold text-slate-600 mb-2">Today's Timed Tasks</h3>
+                     <div id="today-logs-container" class="space-y-2 max-h-48 overflow-y-auto p-2 bg-slate-50 rounded">
+                         <p class="text-slate-500">No tasks timed yet today.</p>
+                     </div>
+                 </div>
+
+                 <!-- Historical Analysis -->
+                 <div>
+                     <h3 class="text-lg font-semibold text-slate-600 mb-2">Historical Performance</h3>
+                     <div class="flex items-center gap-4 mb-4">
+                         <label for="analysis-task-select" class="text-sm font-medium text-gray-700">Analyze task:</label>
+                         <select id="analysis-task-select" class="block w-full max-w-xs p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                             <option value="">-- Select a task --</option>
+                             <!-- Options populated here -->
+                         </select>
+                     </div>
+                     <div id="analysis-results-container">
+                         <p class="text-slate-500">Select a task to see its performance history.</p>
+                     </div>
+                 </div>
+            </div>
+        </div>
+        
+        <!-- RATE ANALYSIS CONTAINER -->
+        <div id="rate-analysis-container" class="hidden w-full bg-white shadow-md rounded-lg overflow-x-auto mt-4">
+             <div class="p-4 border-b">
+                <h2 class="text-2xl font-bold text-slate-700">Task Profitability Analysis</h2>
+                <p class="text-sm text-slate-500">Tasks sorted by highest rate per hour.</p>
+            </div>
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task Name</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Times Logged</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Time</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Rate (₹)</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-bold">Avg. Rate/Hour (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="rate-analysis-body" class="bg-white divide-y divide-gray-200">
+                    <tr><td colspan="5" class="text-center p-8 text-gray-500">Calculating analysis...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
+
+    <!-- Template for Order Card -->
+    <template id="order-card-template">
+        <div class="order-card">
+            <div class="flex justify-between items-start">
+                <p class="font-bold text-lg text-slate-800">Order #<span class="order-number"></span></p>
+                <span class="status-badge text-xs font-semibold px-2 py-1 rounded-full"></span>
+            </div>
+            <p class="text-sm text-slate-600 mt-1">For: <span class="customer-name font-medium"></span></p>
+            <p class="text-sm text-slate-500 mt-2 truncate description" title=""></p>
+            <div class="sub-tasks-container mt-3 space-y-3"></div>
+            <div class="completion-info-container hidden mt-4 pt-4 border-t">
+                 <p class="text-sm text-slate-600">Completed At: <span class="completion-time font-semibold text-green-700"></span></p>
+            </div>
+            <div class="card-actions-container mt-4 pt-4 border-t">
+                <!-- Action buttons will be injected here -->
+            </div>
+        </div>
+    </template>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0_DQIiyaVQllFH4pxH1Dm3r2kFXXoOgc",
+            authDomain: "navrosetailorapp.firebaseapp.com",
+            databaseURL: "https://navrosetailorapp-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "navrosetailorapp"
+        };
+        
+        let db;
+        let activeTimers = {};
+        let workLogs = {};
+        let allOrders = [];
+        let allCustomers = {};
+        let averageTaskTimes = {};
+        
+        // Speed Check State
+        let speedCheckTimer = { startTime: 0, intervalId: null, taskName: '', isPaused: false, accumulatedMs: 0 };
+        let scTimerState = 'stopped'; // 'stopped', 'running', 'paused'
+        let allSpeedCheckLogs = [];
+        const SPEED_CHECK_TASKS = [
+            "Cutting suit without inner", "Cutting suit with inner", "Stitching suit with inner", 
+            "Stitching suit without inner", "Pico duptta", "Pico turban", "Pico plazoo", 
+            "Overlock suit", "Fitting shirt normal", "Full fitting shirt", "Pant Hamming", 
+            "Jean's pant L short", "Pant w losse", "Normal rafu", "Kashmir rafu", 
+            "Patch work rafu", "Jacket zip change", "Jacket repair", "Single plazoo stitching", 
+            "Double plazoo stitching", "Single shirt stitching", "Double shirt stitching", 
+            "Blouse stitching", "Sarees stitching", "Sarees folo add", "Pant zip change"
+        ];
+
+
+        // --- UTILITY FUNCTIONS ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        function formatMilliseconds(ms) {
+            if (ms < 0) ms = 0;
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function getAverageTimeForTask(taskName) {
+            const avgMs = averageTaskTimes[taskName];
+            if (avgMs === undefined) return 'N/A';
+            return `~${formatMilliseconds(avgMs)}`;
+        }
+        
+        async function updateOrderStatus(orderId, newStatus) {
+            const orderRef = db.ref(`orders/${orderId}`);
+            let updates = {};
+            let statusToSave = 'Pending';
+
+            if (newStatus === 'in_progress') {
+                statusToSave = 'In Progress';
+            } else if (newStatus === 'completed_today') {
+                statusToSave = 'Completed';
+                updates.completionTimestamp = firebase.database.ServerValue.TIMESTAMP;
+            }
+            
+            updates.status = statusToSave;
+            
+            try {
+                await orderRef.update(updates);
+                showToast(`Order #${orderId.slice(-4)} moved to ${statusToSave.replace(/_/g, ' ')}.`);
+            } catch (error) {
+                showToast("Error updating order status.");
+                console.error(error);
+            }
+        }
+
+        // --- RENDER & DISPLAY LOGIC ---
+        function renderBoard() {
+            const query = document.getElementById('global-search-input') ? document.getElementById('global-search-input').value.toLowerCase().trim() : '';
+            
+            const filteredOrders = query ? allOrders.filter(order => {
+                const customerName = (allCustomers[order.customerMobile]?.name || '').toLowerCase();
+                const orderNumber = (order.orderNumber || '').toString().toLowerCase();
+
+                let description = '';
+                if (order.type === 'stitching' && Array.isArray(order.items) && order.items.length > 0) {
+                    description = order.items.map(item => `${item.name || 'Item'}`).join(' ').toLowerCase();
+                } else if (order.description) {
+                    description = order.description.toLowerCase();
+                }
+                
+                const taskNames = (order.tasks || []).map(t => t.name.toLowerCase()).join(' ');
+
+                return customerName.includes(query) || orderNumber.includes(query) || description.includes(query) || taskNames.includes(query);
+            }) : allOrders;
+
+
+            const columns = {
+                pending: document.querySelector('.task-column[data-status="pending"] .cards-container'),
+                in_progress: document.querySelector('.task-column[data-status="in_progress"] .cards-container'),
+                completed_today: document.querySelector('.task-column[data-status="completed_today"] .cards-container')
+            };
+
+            Object.values(columns).forEach(col => col.innerHTML = ''); // Clear columns
+
+            const today = new Date().setHours(0,0,0,0);
+
+            const pendingOrders = filteredOrders.filter(o => !o.status || o.status.toLowerCase() === 'pending');
+            const inProgressOrders = filteredOrders.filter(o => o.status && o.status.toLowerCase() === 'in progress');
+            const completedTodayOrders = filteredOrders.filter(o => {
+                return o.status && o.status.toLowerCase() === 'completed' && new Date(o.completionTimestamp || 0).setHours(0,0,0,0) === today;
+            });
+
+            pendingOrders.forEach(order => columns.pending.appendChild(createOrderCard(order)));
+            inProgressOrders.forEach(order => columns.in_progress.appendChild(createOrderCard(order)));
+            completedTodayOrders.forEach(order => columns.completed_today.appendChild(createOrderCard(order)));
+
+            // Update counts for both desktop headers and mobile tabs
+            document.querySelectorAll('[data-status="pending"] .count').forEach(el => el.textContent = pendingOrders.length);
+            document.querySelectorAll('[data-status="in_progress"] .count').forEach(el => el.textContent = inProgressOrders.length);
+            document.querySelectorAll('[data-status="completed_today"] .count').forEach(el => el.textContent = completedTodayOrders.length);
+        }
+
+        function createOrderCard(order) {
+            const template = document.getElementById('order-card-template');
+            const card = template.content.cloneNode(true).querySelector('.order-card');
+            
+            card.dataset.orderId = order.id;
+
+            card.querySelector('.order-number').textContent = order.orderNumber;
+            card.querySelector('.customer-name').textContent = allCustomers[order.customerMobile]?.name || 'Unknown';
+
+            let description = 'No details';
+            if (order.type === 'stitching' && Array.isArray(order.items) && order.items.length > 0) {
+                description = order.items.map(item => `${item.name || 'Item'} (Qty: ${item.quantity || 1})`).join(', ');
+            } else if (order.description) {
+                description = order.description;
+            }
+            card.querySelector('.description').textContent = description;
+            card.querySelector('.description').title = description;
+
+            // Status Badge & Actions
+            const statusBadge = card.querySelector('.status-badge');
+            const actionsContainer = card.querySelector('.card-actions-container');
+            const completionContainer = card.querySelector('.completion-info-container');
+            const status = (order.status || 'Pending').toLowerCase();
+            statusBadge.textContent = order.status || 'Pending';
+            
+            if (status === 'in progress' || status === 'pending') {
+                 renderSubTasks(card.querySelector('.sub-tasks-container'), order);
+            }
+
+            if (status === 'in progress') {
+                statusBadge.className += ' bg-blue-100 text-blue-800';
+                const completeBtn = document.createElement('button');
+                completeBtn.className = 'w-full bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 text-sm';
+                completeBtn.textContent = 'Mark as Complete';
+                completeBtn.onclick = () => updateOrderStatus(order.id, 'completed_today');
+                actionsContainer.appendChild(completeBtn);
+            } else if (status === 'completed') {
+                statusBadge.className += ' bg-green-100 text-green-800';
+                actionsContainer.classList.add('hidden');
+                completionContainer.classList.remove('hidden');
+                card.querySelector('.completion-time').textContent = new Date(order.completionTimestamp).toLocaleString();
+            } else { // Pending
+                statusBadge.className += ' bg-yellow-100 text-yellow-800';
+                const startBtn = document.createElement('button');
+                startBtn.className = 'w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600 text-sm';
+                startBtn.textContent = 'Start Progress';
+                startBtn.onclick = () => updateOrderStatus(order.id, 'in_progress');
+                actionsContainer.appendChild(startBtn);
+            }
+
+            return card;
+        }
+
+        async function renderSubTasks(container, order) {
+            let tasks = order.tasks || [];
+
+            if (tasks.length === 0 && (order.status || 'pending').toLowerCase() !== 'completed') {
+                if (order.type === 'stitching') {
+                    tasks = [
+                        { name: 'Cutting', status: 'pending', loggedTimeMs: null },
+                        { name: 'Stitching', status: 'pending', loggedTimeMs: null },
+                        { name: 'Hemming', status: 'pending', loggedTimeMs: null },
+                        { name: 'Overlock', status: 'pending', loggedTimeMs: null },
+                        { name: 'Pressing', status: 'pending', loggedTimeMs: null }
+                    ];
+                } else { 
+                    tasks = [{ name: order.description || 'Main Task', status: 'pending', loggedTimeMs: null }];
+                }
+                await db.ref(`orders/${order.id}/tasks`).set(tasks);
+            }
+
+            container.innerHTML = tasks.map((task, index) => {
+                 const timerKey = `${order.id}-${index}`;
+                 const activeTimer = activeTimers[timerKey];
+                 let timerHtml = '';
+                 
+                 const status = (order.status || 'pending').toLowerCase();
+                 const isInteractive = status === 'in progress';
+
+                if (task.loggedTimeMs) {
+                    timerHtml = `<span class="text-green-600 font-bold">${formatMilliseconds(task.loggedTimeMs)}</span>`;
+                } else if (activeTimer && isInteractive) {
+                     if (activeTimer.isPaused) {
+                        timerHtml = `
+                            <div class="flex items-center gap-2">
+                                <span class="timer-display text-lg">${formatMilliseconds(activeTimer.accumulatedMs)}</span>
+                                <button class="resume-timer-btn bg-green-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-green-600" data-order-id="${order.id}" data-task-index="${index}">Resume</button>
+                                <button class="stop-timer-btn bg-red-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-red-600" data-order-id="${order.id}" data-task-index="${index}" data-task-name="${task.name}">Stop</button>
+                            </div>`;
+                     } else { // Running
+                         timerHtml = `
+                            <div class="flex items-center gap-2">
+                                <span class="timer-display text-lg">00:00</span>
+                                <button class="pause-timer-btn bg-yellow-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-yellow-600" data-order-id="${order.id}" data-task-index="${index}">Pause</button>
+                                <button class="stop-timer-btn bg-red-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-red-600" data-order-id="${order.id}" data-task-index="${index}" data-task-name="${task.name}">Stop</button>
+                            </div>`;
+                     }
+                } else if (isInteractive) { // Not started yet, but in progress
+                     timerHtml = `<button class="start-timer-btn bg-blue-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-blue-600" data-order-id="${order.id}" data-task-index="${index}" data-task-name="${task.name}">Start</button>`;
+                } else { // Pending or Completed order, timers not interactive
+                    timerHtml = `<span class="text-gray-400 text-sm">Not started</span>`;
+                }
+
+
+                return `
+                <div class="sub-task flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <div class="flex-grow w-full sm:w-auto">
+                        <input type="text" value="${task.name}" class="text-sm font-medium text-slate-700 w-full bg-transparent p-1 rounded hover:bg-slate-100 focus:bg-slate-100 focus:outline-none" onchange="updateTaskName('${order.id}', ${index}, this.value)">
+                        <div class="flex items-center justify-between mt-1">
+                            <span class="text-xs text-slate-500">Last Avg: <span class="font-semibold">${getAverageTimeForTask(task.name)}</span></span>
+                             <div class="flex items-center gap-1">
+                                <label for="rate-${order.id}-${index}" class="text-xs text-slate-500">Rate (₹)</label>
+                                <input id="rate-${order.id}-${index}" type="number" value="${task.rate || ''}" class="rate-input" onchange="updateTaskRate('${order.id}', ${index}, this.value)">
+                            </div>
+                        </div>
+                    </div>
+                    <div id="timer-cell-${order.id}-${index}" class="flex-shrink-0 mt-2 sm:mt-0">
+                        ${timerHtml}
+                    </div>
+                </div>
+            `}).join('');
+
+            attachTimerButtonListeners(container);
+        }
+
+        function renderTimeComparisonTable() {
+            const tbody = document.getElementById('time-comparison-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            const pendingOrders = allOrders.filter(o => !o.status || o.status.toLowerCase() === 'pending');
+            
+            if (pendingOrders.length === 0) {
+                 tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-500">No pending orders to set times for.</td></tr>`;
+                 return;
+            }
+
+            pendingOrders.forEach(order => {
+                let tasks = order.tasks || [];
+                if (tasks.length === 0) {
+                    if (order.type === 'stitching') {
+                        tasks = [ { name: 'Cutting' }, { name: 'Stitching' }, { name: 'Hemming' }, { name: 'Overlock' }, { name: 'Pressing' } ];
+                    } else { tasks = [{ name: order.description || 'Main Task' }]; }
+                }
+
+                tasks.forEach((task, index) => {
+                    const avgMs = averageTaskTimes[task.name];
+                    const avgMins = avgMs ? Math.round(avgMs / 60000) : null;
+                    const estimatedMins = task.estimatedMinutes;
+                    
+                    let statusHtml = '<span class="text-gray-400">Not Set</span>';
+                    if (estimatedMins && avgMins !== null) {
+                        const tolerance = 0.20; // 20% tolerance
+                        const lowerBound = avgMins * (1 - tolerance);
+                        const upperBound = avgMins * (1 + tolerance);
+                        if (estimatedMins >= lowerBound && estimatedMins <= upperBound) {
+                            statusHtml = '<span class="font-semibold text-green-600">Target Done ✅</span>';
+                        } else {
+                            statusHtml = '<span class="font-semibold text-red-600">Target Not Done</span>';
+                        }
+                    } else if (estimatedMins) {
+                        statusHtml = '<span class="text-blue-600">ETA Set</span>';
+                    }
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap font-mono">#${order.orderNumber}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${allCustomers[order.customerMobile]?.name || 'Unknown'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700">${task.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-mono">${avgMins !== null ? `${avgMins} min` : 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <input type="number" class="eta-input w-24 border-gray-300 rounded-md shadow-sm text-sm" value="${estimatedMins || ''}" placeholder="e.g., 20">
+                                <button class="save-eta-btn bg-indigo-600 text-white text-xs font-bold py-1 px-3 rounded hover:bg-indigo-700" data-order-id="${order.id}" data-task-index="${index}">Save</button>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">${statusHtml}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            });
+        }
+
+        // --- DATA & TIMER LOGIC ---
+        function calculateAverageTimes() {
+            const groupedLogs = {};
+            Object.values(workLogs).forEach(log => {
+                if (!log.subTaskName || !log.durationMs) return;
+                if (!groupedLogs[log.subTaskName]) {
+                    groupedLogs[log.subTaskName] = { totalMs: 0, count: 0 };
+                }
+                groupedLogs[log.subTaskName].totalMs += log.durationMs;
+                groupedLogs[log.subTaskName].count++;
+            });
+
+            averageTaskTimes = {};
+            for (const taskName in groupedLogs) {
+                averageTaskTimes[taskName] = groupedLogs[taskName].totalMs / groupedLogs[taskName].count;
+            }
+        }
+        
+        function attachTimerButtonListeners(container) {
+             container.addEventListener('click', (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+
+                const { orderId, taskIndex, taskName } = btn.dataset;
+                if (!orderId || !taskIndex) return;
+
+                if (btn.classList.contains('start-timer-btn')) {
+                    startTimer(orderId, parseInt(taskIndex), taskName);
+                } else if (btn.classList.contains('stop-timer-btn')) {
+                    stopTimer(orderId, parseInt(taskIndex), taskName);
+                } else if (btn.classList.contains('pause-timer-btn')) {
+                    pauseTimer(orderId, parseInt(taskIndex));
+                } else if (btn.classList.contains('resume-timer-btn')) {
+                    resumeTimer(orderId, parseInt(taskIndex));
+                }
+            });
+        }
+
+        function startTimer(orderId, taskIndex, taskName) {
+            const timerKey = `${orderId}-${taskIndex}`;
+            if (activeTimers[timerKey] || Object.keys(activeTimers).length > 0) {
+                 showToast("Another timer is already running. Please stop it first.");
+                 return;
+            }
+
+            const startTime = Date.now();
+            const intervalId = setInterval(() => {
+                const timerCell = document.getElementById(`timer-cell-${timerKey}`);
+                if (!timerCell) {
+                    clearInterval(intervalId);
+                    return;
+                }
+                const timerDisplay = timerCell.querySelector('.timer-display');
+                if (timerDisplay) {
+                     const timer = activeTimers[timerKey];
+                     if(timer && !timer.isPaused) {
+                        const elapsed = timer.accumulatedMs + (Date.now() - timer.startTime);
+                        timerDisplay.textContent = formatMilliseconds(elapsed);
+                     }
+                }
+            }, 1000);
+
+            activeTimers[timerKey] = { startTime, intervalId, taskName, orderId, taskIndex, accumulatedMs: 0, isPaused: false };
+            
+            renderBoard(); // Re-render to show updated buttons
+        }
+
+        function pauseTimer(orderId, taskIndex) {
+            const timerKey = `${orderId}-${taskIndex}`;
+            const timer = activeTimers[timerKey];
+            if (!timer || timer.isPaused) return;
+
+            clearInterval(timer.intervalId);
+            timer.accumulatedMs += Date.now() - timer.startTime;
+            timer.isPaused = true;
+            timer.intervalId = null; 
+            renderBoard();
+        }
+
+        function resumeTimer(orderId, taskIndex) {
+            const timerKey = `${orderId}-${taskIndex}`;
+            const timer = activeTimers[timerKey];
+            if (!timer || !timer.isPaused) return;
+
+            timer.startTime = Date.now();
+            timer.isPaused = false;
+            
+            const intervalId = setInterval(() => {
+                const timerCell = document.getElementById(`timer-cell-${timerKey}`);
+                if (!timerCell) {
+                    clearInterval(intervalId);
+                    return;
+                }
+                const timerDisplay = timerCell.querySelector('.timer-display');
+                 if (timerDisplay) {
+                     const currentTimer = activeTimers[timerKey];
+                     if(currentTimer && !currentTimer.isPaused) {
+                        const elapsed = currentTimer.accumulatedMs + (Date.now() - currentTimer.startTime);
+                        timerDisplay.textContent = formatMilliseconds(elapsed);
+                     }
+                }
+            }, 1000);
+            timer.intervalId = intervalId;
+            renderBoard();
+        }
+
+        async function stopTimer(orderId, taskIndex, taskName) {
+            const timerKey = `${orderId}-${taskIndex}`;
+            const timer = activeTimers[timerKey];
+            if (!timer) return;
+
+            clearInterval(timer.intervalId);
+            const durationMs = timer.accumulatedMs + (timer.isPaused ? 0 : (Date.now() - timer.startTime));
+
+            try {
+                await db.ref('workTimeLogs').push({
+                    orderId: orderId,
+                    orderNumber: allOrders.find(o=>o.id === orderId)?.orderNumber || 'N/A',
+                    subTaskName: taskName,
+                    durationMs: durationMs,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                await db.ref(`orders/${orderId}/tasks/${taskIndex}`).update({
+                    status: 'completed',
+                    loggedTimeMs: durationMs
+                });
+
+                showToast(`Logged ${formatMilliseconds(durationMs)} for "${taskName}"`);
+            } catch (error) {
+                showToast("Error logging time.");
+                console.error("Error saving work log:", error);
+            }
+
+            delete activeTimers[timerKey];
+        }
+        
+        async function updateTaskName(orderId, taskIndex, newName) {
+            if (!newName.trim()) {
+                showToast("Task name cannot be empty.");
+                return;
+            }
+            try {
+                await db.ref(`orders/${orderId}/tasks/${taskIndex}/name`).set(newName.trim());
+                showToast("Task name updated.");
+            } catch(e) {
+                showToast("Error updating task name.");
+                console.error(e);
+            }
+        }
+        window.updateTaskName = updateTaskName;
+
+         async function updateTaskRate(orderId, taskIndex, rate) {
+            const rateValue = parseFloat(rate);
+            if (isNaN(rateValue) || rateValue < 0) {
+                showToast("Please enter a valid rate.");
+                return;
+            }
+            try {
+                await db.ref(`orders/${orderId}/tasks/${taskIndex}/rate`).set(rateValue);
+            } catch(e) {
+                showToast("Error saving rate.");
+                console.error(e);
+            }
+        }
+        window.updateTaskRate = updateTaskRate;
+
+
+        async function saveTaskEta(orderId, taskIndex, etaMinutes) {
+            const etaValue = parseInt(etaMinutes, 10);
+            if (isNaN(etaValue) || etaValue < 0) {
+                showToast("Please enter a valid number for minutes.");
+                return;
+            }
+            
+            const orderRef = db.ref(`orders/${orderId}`);
+            const orderSnapshot = await orderRef.once('value');
+
+            if (!orderSnapshot.exists()) {
+                showToast("Could not find the order. It may have been updated or removed.");
+                console.error(`Order with ID ${orderId} not found in Firebase when trying to save ETA.`);
+                return;
+            }
+            const order = orderSnapshot.val();
+
+            let tasks = order.tasks || [];
+            if (tasks.length === 0) {
+                 if (order.type === 'stitching') {
+                    tasks = [ { name: 'Cutting' }, { name: 'Stitching' }, { name: 'Hemming' }, { name: 'Overlock' }, { name: 'Pressing' } ];
+                } else { tasks = [{ name: order.description || 'Main Task' }]; }
+            }
+            
+            if (!tasks[taskIndex]) tasks[taskIndex] = {};
+            tasks[taskIndex].estimatedMinutes = etaValue;
+            if (!tasks[taskIndex].name) tasks[taskIndex].name = 'Unnamed Task';
+            if (!tasks[taskIndex].status) tasks[taskIndex].status = 'pending';
+
+            try {
+                await db.ref(`orders/${orderId}/tasks`).set(tasks);
+                showToast("ETA saved successfully.");
+            } catch (e) {
+                showToast("Error saving ETA.");
+                console.error(e);
+            }
+        }
+
+        // --- SPEED CHECK FUNCTIONS ---
+        function startSpeedCheckTimer() {
+            const taskSelect = document.getElementById('task-select');
+            const taskName = taskSelect.value;
+            if (!taskName) {
+                showToast("Please select a task first.");
+                return;
+            }
+            
+            scTimerState = 'running';
+            
+            speedCheckTimer = {
+                startTime: Date.now(),
+                intervalId: null,
+                taskName: taskName,
+                isPaused: false,
+                accumulatedMs: 0
+            };
+
+            speedCheckTimer.intervalId = setInterval(() => {
+                const elapsed = speedCheckTimer.accumulatedMs + (Date.now() - speedCheckTimer.startTime);
+                document.getElementById('sc-timer-display').textContent = formatMilliseconds(elapsed);
+            }, 1000);
+
+            // Update UI
+            const controlBtn = document.getElementById('sc-timer-control-btn');
+            controlBtn.textContent = 'Pause';
+            controlBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+            controlBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+            document.getElementById('sc-timer-stop-btn').classList.remove('hidden');
+            taskSelect.disabled = true;
+            document.getElementById('task-rate-input').disabled = true;
+        }
+
+        function pauseSpeedCheckTimer() {
+            if (scTimerState !== 'running') return;
+            scTimerState = 'paused';
+            
+            clearInterval(speedCheckTimer.intervalId);
+            speedCheckTimer.intervalId = null;
+            speedCheckTimer.accumulatedMs += (Date.now() - speedCheckTimer.startTime);
+            speedCheckTimer.isPaused = true;
+            
+            // Update UI
+            const controlBtn = document.getElementById('sc-timer-control-btn');
+            controlBtn.textContent = 'Resume';
+            controlBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
+            controlBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+        }
+
+        function resumeSpeedCheckTimer() {
+            if (scTimerState !== 'paused') return;
+            scTimerState = 'running';
+            
+            speedCheckTimer.startTime = Date.now();
+            speedCheckTimer.isPaused = false;
+            
+            speedCheckTimer.intervalId = setInterval(() => {
+                const elapsed = speedCheckTimer.accumulatedMs + (Date.now() - speedCheckTimer.startTime);
+                document.getElementById('sc-timer-display').textContent = formatMilliseconds(elapsed);
+            }, 1000);
+            
+            // Update UI
+            const controlBtn = document.getElementById('sc-timer-control-btn');
+            controlBtn.textContent = 'Pause';
+            controlBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+            controlBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+        }
+
+        async function stopSpeedCheckTimer() {
+            if (scTimerState === 'stopped') return;
+            
+            clearInterval(speedCheckTimer.intervalId);
+            
+            const durationMs = speedCheckTimer.isPaused 
+                ? speedCheckTimer.accumulatedMs 
+                : speedCheckTimer.accumulatedMs + (Date.now() - speedCheckTimer.startTime);
+                
+            const rateInput = document.getElementById('task-rate-input');
+            const rateValue = parseFloat(rateInput.value);
+            
+            try {
+                const logEntry = {
+                    taskName: speedCheckTimer.taskName,
+                    durationMs: durationMs,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+                if (!isNaN(rateValue) && rateValue > 0) {
+                    logEntry.rate = rateValue;
+                }
+                await db.ref('speedCheckLogs').push(logEntry);
+                showToast(`Logged ${formatMilliseconds(durationMs)} for "${speedCheckTimer.taskName}"`);
+            } catch (error) {
+                showToast("Error saving log.");
+                console.error(error);
+            }
+            
+            // Reset state and UI
+            scTimerState = 'stopped';
+            speedCheckTimer = { startTime: 0, intervalId: null, taskName: '', isPaused: false, accumulatedMs: 0 };
+            
+            const controlBtn = document.getElementById('sc-timer-control-btn');
+            document.getElementById('sc-timer-display').textContent = '00:00';
+            controlBtn.textContent = 'Start';
+            controlBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'bg-green-500', 'hover:bg-green-600');
+            controlBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            document.getElementById('sc-timer-stop-btn').classList.add('hidden');
+            document.getElementById('task-select').disabled = false;
+            rateInput.disabled = false;
+            rateInput.value = '';
+        }
+
+        function renderTodaySpeedLogs() {
+            const container = document.getElementById('today-logs-container');
+            const today = new Date().setHours(0, 0, 0, 0);
+            
+            const todayLogs = allSpeedCheckLogs
+                .filter(log => new Date(log.timestamp).setHours(0, 0, 0, 0) === today)
+                .sort((a, b) => b.timestamp - a.timestamp);
+
+            if (todayLogs.length === 0) {
+                container.innerHTML = '<p class="text-slate-500">No tasks timed yet today.</p>';
+                return;
+            }
+
+            container.innerHTML = todayLogs.map(log => `
+                <div class="flex justify-between items-center text-sm p-1">
+                    <span class="text-slate-700">${log.taskName} ${log.rate ? `(₹${log.rate})` : ''}</span>
+                    <span class="font-semibold font-mono text-slate-800">${formatMilliseconds(log.durationMs)}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderAnalysis(taskName) {
+            const container = document.getElementById('analysis-results-container');
+            if (!taskName) {
+                container.innerHTML = '<p class="text-slate-500">Select a task to see its performance history.</p>';
+                return;
+            }
+            
+            const taskLogs = allSpeedCheckLogs.filter(log => log.taskName === taskName);
+            if (taskLogs.length === 0) {
+                container.innerHTML = `<p class="text-slate-500">No time logs found for "${taskName}".</p>`;
+                return;
+            }
+
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const dayOfWeek = today.getDay(); // Sunday - 0, Monday - 1
+            const startOfThisWeek = new Date(today.setDate(today.getDate() - dayOfWeek));
+            const startOfLastWeek = new Date(new Date(startOfThisWeek).setDate(startOfThisWeek.getDate() - 7));
+            const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const endOfLastMonth = new Date(startOfThisMonth - 1);
+
+            const calcAvg = (logs) => {
+                if (logs.length === 0) return null;
+                const totalMs = logs.reduce((sum, log) => sum + log.durationMs, 0);
+                return totalMs / logs.length;
+            };
+
+            const thisWeekAvg = calcAvg(taskLogs.filter(l => l.timestamp >= startOfThisWeek.getTime()));
+            const lastWeekAvg = calcAvg(taskLogs.filter(l => l.timestamp >= startOfLastWeek.getTime() && l.timestamp < startOfThisWeek.getTime()));
+            const thisMonthAvg = calcAvg(taskLogs.filter(l => l.timestamp >= startOfThisMonth.getTime()));
+            const lastMonthAvg = calcAvg(taskLogs.filter(l => l.timestamp >= startOfLastMonth.getTime() && l.timestamp < startOfThisMonth.getTime()));
+
+            const formatAvg = (avg) => avg === null ? 'N/A' : formatMilliseconds(avg);
+            
+            const renderRow = (period, avg) => `
+                <tr class="border-b">
+                    <td class="py-2 px-4 font-semibold text-slate-600">${period}</td>
+                    <td class="py-2 px-4 font-mono font-bold text-slate-800">${formatAvg(avg)}</td>
+                </tr>`;
+
+            container.innerHTML = `
+                <div class="overflow-x-auto rounded-lg border">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-100">
+                            <tr><th class="py-2 px-4 text-left font-semibold" colspan="2">Average Time for: ${taskName}</th></tr>
+                        </thead>
+                        <tbody>
+                            ${renderRow('This Week', thisWeekAvg)}
+                            ${renderRow('Last Week', lastWeekAvg)}
+                            ${renderRow('This Month', thisMonthAvg)}
+                            ${renderRow('Last Month', lastMonthAvg)}
+                        </tbody>
+                    </table>
+                </div>`;
+        }
+        
+        // --- RATE ANALYSIS FUNCTION ---
+        function renderRateAnalysisReport() {
+            const tbody = document.getElementById('rate-analysis-body');
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">Calculating analysis...</td></tr>`;
+            
+            const allLogs = [...Object.values(workLogs), ...allSpeedCheckLogs]; // Combine logs from both sources
+            const tasksSummary = {};
+
+            allLogs.forEach(log => {
+                let logRate = log.rate;
+
+                // If log is from an order, find the rate on that order's task
+                if (log.orderId) {
+                    const order = allOrders.find(o => o.id === log.orderId);
+                    if (order && order.tasks) {
+                        const task = order.tasks.find(t => t.name === log.subTaskName && t.loggedTimeMs === log.durationMs);
+                        if (task && task.rate) {
+                            logRate = task.rate;
+                        }
+                    }
+                }
+                
+                const taskName = log.subTaskName || log.taskName;
+                if (!taskName || !logRate) return;
+
+                if (!tasksSummary[taskName]) {
+                    tasksSummary[taskName] = { name: taskName, totalMs: 0, totalRate: 0, count: 0 };
+                }
+                
+                tasksSummary[taskName].totalMs += log.durationMs;
+                tasksSummary[taskName].totalRate += parseFloat(logRate);
+                tasksSummary[taskName].count++;
+            });
+
+            const analysisResults = Object.values(tasksSummary).map(summary => {
+                const avgMs = summary.totalMs / summary.count;
+                const avgRate = summary.totalRate / summary.count;
+                const ratePerHour = avgMs > 0 ? (avgRate / avgMs) * 3600000 : 0;
+                return { ...summary, avgMs, avgRate, ratePerHour };
+            });
+            
+            // Sort by most profitable first
+            analysisResults.sort((a, b) => b.ratePerHour - a.ratePerHour);
+            
+            if (analysisResults.length === 0) {
+                 tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">No completed tasks with rates found to analyze.</td></tr>`;
+                 return;
+            }
+
+            tbody.innerHTML = analysisResults.map(res => `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-6 py-4 font-bold text-slate-800">${res.name}</td>
+                    <td class="px-6 py-4 text-slate-600">${res.count}</td>
+                    <td class="px-6 py-4 font-mono">${formatMilliseconds(res.avgMs)}</td>
+                    <td class="px-6 py-4 font-mono">₹${res.avgRate.toFixed(2)}</td>
+                    <td class="px-6 py-4 font-mono font-bold text-lg text-indigo-700">₹${res.ratePerHour.toFixed(2)}</td>
+                </tr>
+            `).join('');
+        }
+
+
+        // --- INITIALIZATION & Mobile Tab Setup ---
+        function setupTabs() {
+            const tabsContainer = document.getElementById('mobile-tabs-container');
+            if (!tabsContainer) return;
+
+            const tabs = tabsContainer.querySelectorAll('.mobile-tab');
+            const boardContainer = document.getElementById('board-container');
+            const timeContainer = document.getElementById('time-comparison-container');
+            const speedCheckContainer = document.getElementById('speed-check-container');
+            const rateAnalysisContainer = document.getElementById('rate-analysis-container');
+            const columns = document.querySelectorAll('.task-column');
+
+            tabsContainer.addEventListener('click', (e) => {
+                const clickedTab = e.target.closest('.mobile-tab');
+                if (!clickedTab) return;
+
+                const status = clickedTab.dataset.status;
+
+                tabs.forEach(tab => tab.classList.remove('active'));
+                clickedTab.classList.add('active');
+                
+                // Hide all main containers first
+                boardContainer.style.display = 'none';
+                timeContainer.classList.add('hidden');
+                speedCheckContainer.classList.add('hidden');
+                rateAnalysisContainer.classList.add('hidden');
+                
+                if (status === 'time_comparison') {
+                    timeContainer.classList.remove('hidden');
+                } else if (status === 'speed_check') {
+                    speedCheckContainer.classList.remove('hidden');
+                } else if (status === 'rate_analysis') {
+                    rateAnalysisContainer.classList.remove('hidden');
+                    renderRateAnalysisReport(); // Recalculate when tab is viewed
+                } else {
+                    boardContainer.style.display = 'grid';
+                    columns.forEach(col => {
+                        if (col.dataset.status === status) {
+                            col.classList.remove('hidden');
+                            col.classList.add('flex');
+                        } else {
+                            col.classList.add('hidden');
+                            col.classList.remove('flex');
+                        }
+                    });
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                
+                setupTabs();
+
+                // Populate Speed Check dropdowns
+                const taskSelect = document.getElementById('task-select');
+                const analysisTaskSelect = document.getElementById('analysis-task-select');
+                SPEED_CHECK_TASKS.forEach(task => {
+                    taskSelect.innerHTML += `<option value="${task}">${task}</option>`;
+                    analysisTaskSelect.innerHTML += `<option value="${task}">${task}</option>`;
+                });
+
+                // Listeners
+                document.getElementById('global-search-input').addEventListener('input', renderBoard);
+
+                db.ref('workTimeLogs').on('value', (snapshot) => {
+                    workLogs = snapshot.val() || {};
+                    calculateAverageTimes();
+                    renderTimeComparisonTable();
+                    renderRateAnalysisReport(); // Update analysis if logs change
+                });
+                
+                db.ref('customers').on('value', (snapshot) => {
+                    const customersVal = snapshot.val() || {};
+                    allCustomers = Object.values(customersVal).reduce((acc, customer) => {
+                        if (customer.mobile) acc[customer.mobile] = customer;
+                        return acc;
+                    }, {});
+                });
+
+                db.ref('orders').on('value', (snapshot) => {
+                    const ordersVal = snapshot.val() || {};
+                    allOrders = Object.entries(ordersVal)
+                        .map(([id, value]) => ({ id, ...value }))
+                        .filter(o => o.orderNumber && (o.type === 'stitching' || o.type === 'alteration'));
+                    
+                    allOrders.sort((a,b) => (a.orderNumber || 0) - (b.orderNumber || 0));
+                    
+                    renderBoard();
+                    renderTimeComparisonTable();
+                    renderRateAnalysisReport(); // Update analysis if order data (like rates) changes
+                });
+                
+                db.ref('speedCheckLogs').on('value', (snapshot) => {
+                    const logs = snapshot.val() || {};
+                    allSpeedCheckLogs = Object.values(logs);
+                    renderTodaySpeedLogs();
+                    const selectedTask = document.getElementById('analysis-task-select').value;
+                    if(selectedTask) renderAnalysis(selectedTask);
+                    renderRateAnalysisReport(); // Also update this report if speed logs change
+                });
+
+
+                document.getElementById('time-comparison-body').addEventListener('click', (e) => {
+                    if (e.target.classList.contains('save-eta-btn')) {
+                        const button = e.target;
+                        const { orderId, taskIndex } = button.dataset;
+                        const input = button.closest('td').querySelector('.eta-input');
+                        saveTaskEta(orderId, parseInt(taskIndex), input.value);
+                    }
+                });
+                
+                // Speed check listeners
+                document.getElementById('sc-timer-control-btn').addEventListener('click', () => {
+                    if (scTimerState === 'stopped') {
+                        startSpeedCheckTimer();
+                    } else if (scTimerState === 'running') {
+                        pauseSpeedCheckTimer();
+                    } else if (scTimerState === 'paused') {
+                        resumeSpeedCheckTimer();
+                    }
+                });
+                document.getElementById('sc-timer-stop-btn').addEventListener('click', stopSpeedCheckTimer);
+                document.getElementById('analysis-task-select').addEventListener('change', (e) => renderAnalysis(e.target.value));
+
+            } catch (e) {
+                console.error(e);
+                document.body.innerHTML = `<div class="p-8 text-center text-red-500"><h1>Error</h1><p>Failed to load data. Check Firebase connection.</p></div>`;
+                alert("Firebase connection failed.");
+            }
+        });
+    </script>
+
+<script type="module" src="/index.tsx"></script>
+
+<script src="./script.js"></script></body></html>
