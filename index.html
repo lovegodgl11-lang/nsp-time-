@@ -971,9 +971,12 @@
                 return;
             }
 
-            container.innerHTML = todayLogs.map(log => `
-                <div class="flex justify-between items-center text-sm p-1">
-                    <span class="text-slate-700">${log.taskName} ${log.rate ? `(₹${log.rate})` : ''}</span>
+            container.innerHTML = todayLogs.map((log, index) => `
+                <div class="flex items-center justify-between text-sm p-1">
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-slate-500 w-6">${index + 1}.</span>
+                        <span class="text-slate-700">${log.taskName} ${log.rate ? `(₹${log.rate})` : ''}</span>
+                    </div>
                     <span class="font-semibold font-mono text-slate-800">${formatMilliseconds(log.durationMs)}</span>
                 </div>
             `).join('');
@@ -1098,10 +1101,13 @@
         // --- MANAGE SPEED CHECK TASKS ---
         function renderManageTasksModal() {
             const listContainer = document.getElementById('manage-tasks-list');
-            listContainer.innerHTML = speedCheckTasks.map(task => `
+            listContainer.innerHTML = speedCheckTasks.map((task, index) => `
                 <div class="flex items-center justify-between p-2 bg-slate-100 rounded-md" data-task-id="${task.id}">
-                    <span class="task-name">${task.name}</span>
-                    <div class="task-actions flex gap-2">
+                    <div class="flex items-center gap-2 flex-grow">
+                        <span class="font-semibold text-slate-500 w-6">${index + 1}.</span>
+                        <span class="task-name flex-grow">${task.name}</span>
+                    </div>
+                    <div class="task-actions flex gap-2 flex-shrink-0">
                         <button class="edit-task-btn text-sm font-semibold text-blue-600 hover:underline">Edit</button>
                         <button class="delete-task-btn text-sm font-semibold text-red-600 hover:underline">Delete</button>
                     </div>
