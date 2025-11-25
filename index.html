@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Nsp time </title><meta name="title" content="Nsp time "><meta charset="UTF-8">
+<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>Time system </title><meta name="title" content="Time system "><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="./style.css"><script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" async=""></script><script type="importmap">{
   "imports": {}
 }</script></head><body>
@@ -105,6 +105,9 @@
         .rate-input:focus {
             outline: 1px solid #4f46e5;
         }
+        .modal {
+            background-color: rgba(0,0,0,0.5);
+        }
 
     </style>
 <link rel="stylesheet" href="/index.css">
@@ -199,7 +202,10 @@
         <div id="speed-check-container" class="hidden w-full space-y-6">
             <!-- Timer Section -->
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-2xl font-bold text-slate-700 mb-4">Time a New Task</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-slate-700">Time a New Task</h2>
+                    <button id="manage-tasks-btn" class="text-sm font-semibold text-indigo-600 hover:bg-indigo-100 p-2 rounded-md">Manage Tasks</button>
+                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                     <div>
                         <label for="task-select" class="block text-sm font-medium text-gray-700">Select Task</label>
@@ -276,6 +282,23 @@
     <!-- Toast Notification -->
     <div id="toast" class="hidden fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
 
+    <!-- Manage Tasks Modal -->
+    <div id="manage-tasks-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg flex flex-col max-h-[80vh]">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold">Manage Speed Check Tasks</h3>
+                <button id="close-manage-tasks-modal-btn" class="text-gray-500 hover:text-gray-800 text-2xl">×</button>
+            </div>
+            <div id="manage-tasks-list" class="flex-grow overflow-y-auto p-4 space-y-2">
+                <!-- Task list will be rendered here -->
+            </div>
+            <form id="add-task-form" class="p-4 border-t flex gap-2">
+                <input type="text" id="new-task-name-input" class="w-full border rounded-md px-4 py-2" placeholder="Enter new task name..." required="" autocomplete="off">
+                <button type="submit" class="bg-indigo-600 text-white font-semibold rounded-md px-4 py-2 whitespace-nowrap">Add Task</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Template for Order Card -->
     <template id="order-card-template">
         <div class="order-card">
@@ -314,7 +337,9 @@
         let speedCheckTimer = { startTime: 0, intervalId: null, taskName: '', isPaused: false, accumulatedMs: 0 };
         let scTimerState = 'stopped'; // 'stopped', 'running', 'paused'
         let allSpeedCheckLogs = [];
-        const SPEED_CHECK_TASKS = [
+        let speedCheckTasks = []; // Will be populated from Firebase
+
+        const INITIAL_SPEED_CHECK_TASKS = [
             "Cutting suit without inner", "Cutting suit with inner", "Stitching suit with inner", 
             "Stitching suit without inner", "Pico duptta", "Pico turban", "Pico plazoo", 
             "Overlock suit", "Fitting shirt normal", "Full fitting shirt", "Pant Hamming", 
@@ -807,6 +832,21 @@
         }
 
         // --- SPEED CHECK FUNCTIONS ---
+        function renderSpeedCheckDropdowns() {
+            const taskSelect = document.getElementById('task-select');
+            const analysisTaskSelect = document.getElementById('analysis-task-select');
+            const savedValue = analysisTaskSelect.value;
+
+            taskSelect.innerHTML = '';
+            analysisTaskSelect.innerHTML = '<option value="">-- Select a task --</option>';
+
+            speedCheckTasks.forEach(task => {
+                taskSelect.innerHTML += `<option value="${task.name}">${task.name}</option>`;
+                analysisTaskSelect.innerHTML += `<option value="${task.name}">${task.name}</option>`;
+            });
+            analysisTaskSelect.value = savedValue;
+        }
+
         function startSpeedCheckTimer() {
             const taskSelect = document.getElementById('task-select');
             const taskName = taskSelect.value;
@@ -959,20 +999,19 @@
             const startOfLastWeek = new Date(new Date(startOfThisWeek).setDate(startOfThisWeek.getDate() - 7));
             const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            const endOfLastMonth = new Date(startOfThisMonth - 1);
 
             const calcAvg = (logs) => {
                 if (logs.length === 0) return null;
-                const totalMs = logs.reduce((sum, log) => sum + log.durationMs, 0);
+                const totalMs = logs.reduce((sum, log) => sum + (log.durationMs || 0), 0);
                 return totalMs / logs.length;
             };
 
-            const thisWeekAvg = calcAvg(taskLogs.filter(l => l.timestamp >= startOfThisWeek.getTime()));
-            const lastWeekAvg = calcAvg(taskLogs.filter(l => l.timestamp >= startOfLastWeek.getTime() && l.timestamp < startOfThisWeek.getTime()));
-            const thisMonthAvg = calcAvg(taskLogs.filter(l => l.timestamp >= startOfThisMonth.getTime()));
-            const lastMonthAvg = calcAvg(taskLogs.filter(l => l.timestamp >= startOfLastMonth.getTime() && l.timestamp < startOfThisMonth.getTime()));
+            const thisWeekAvg = calcAvg(taskLogs.filter(l => l.timestamp && l.timestamp >= startOfThisWeek.getTime()));
+            const lastWeekAvg = calcAvg(taskLogs.filter(l => l.timestamp && l.timestamp >= startOfLastWeek.getTime() && l.timestamp < startOfThisWeek.getTime()));
+            const thisMonthAvg = calcAvg(taskLogs.filter(l => l.timestamp && l.timestamp >= startOfThisMonth.getTime()));
+            const lastMonthAvg = calcAvg(taskLogs.filter(l => l.timestamp && l.timestamp >= startOfLastMonth.getTime() && l.timestamp < startOfThisMonth.getTime()));
 
-            const formatAvg = (avg) => avg === null ? 'N/A' : formatMilliseconds(avg);
+            const formatAvg = (avg) => avg === null || isNaN(avg) ? 'N/A' : formatMilliseconds(avg);
             
             const renderRow = (period, avg) => `
                 <tr class="border-b">
@@ -1005,13 +1044,14 @@
             const tasksSummary = {};
 
             allLogs.forEach(log => {
+                if (!log || (!log.subTaskName && !log.taskName)) return;
+                
                 let logRate = log.rate;
 
-                // If log is from an order, find the rate on that order's task
                 if (log.orderId) {
                     const order = allOrders.find(o => o.id === log.orderId);
                     if (order && order.tasks) {
-                        const task = order.tasks.find(t => t.name === log.subTaskName && t.loggedTimeMs === log.durationMs);
+                        const task = order.tasks.find(t => t.name === log.subTaskName);
                         if (task && task.rate) {
                             logRate = task.rate;
                         }
@@ -1025,8 +1065,8 @@
                     tasksSummary[taskName] = { name: taskName, totalMs: 0, totalRate: 0, count: 0 };
                 }
                 
-                tasksSummary[taskName].totalMs += log.durationMs;
-                tasksSummary[taskName].totalRate += parseFloat(logRate);
+                tasksSummary[taskName].totalMs += (log.durationMs || 0);
+                tasksSummary[taskName].totalRate += (parseFloat(logRate) || 0);
                 tasksSummary[taskName].count++;
             });
 
@@ -1037,7 +1077,6 @@
                 return { ...summary, avgMs, avgRate, ratePerHour };
             });
             
-            // Sort by most profitable first
             analysisResults.sort((a, b) => b.ratePerHour - a.ratePerHour);
             
             if (analysisResults.length === 0) {
@@ -1056,6 +1095,40 @@
             `).join('');
         }
 
+        // --- MANAGE SPEED CHECK TASKS ---
+        function renderManageTasksModal() {
+            const listContainer = document.getElementById('manage-tasks-list');
+            listContainer.innerHTML = speedCheckTasks.map(task => `
+                <div class="flex items-center justify-between p-2 bg-slate-100 rounded-md" data-task-id="${task.id}">
+                    <span class="task-name">${task.name}</span>
+                    <div class="task-actions flex gap-2">
+                        <button class="edit-task-btn text-sm font-semibold text-blue-600 hover:underline">Edit</button>
+                        <button class="delete-task-btn text-sm font-semibold text-red-600 hover:underline">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function addNewSpeedCheckTask(taskName) {
+            if (!taskName) return;
+            const newTaskRef = db.ref('speedCheckTasks').push();
+            await newTaskRef.set({ id: newTaskRef.key, name: taskName });
+            showToast(`Task "${taskName}" added.`);
+        }
+
+        async function updateSpeedCheckTask(taskId, newName) {
+            if (!taskId || !newName) return;
+            await db.ref(`speedCheckTasks/${taskId}/name`).set(newName);
+             showToast(`Task updated.`);
+        }
+
+        async function deleteSpeedCheckTask(taskId, taskName) {
+            if (!taskId) return;
+            if (confirm(`Are you sure you want to delete the task "${taskName}"?`)) {
+                 await db.ref(`speedCheckTasks/${taskId}`).remove();
+                 showToast(`Task deleted.`);
+            }
+        }
 
         // --- INITIALIZATION & Mobile Tab Setup ---
         function setupTabs() {
@@ -1078,7 +1151,6 @@
                 tabs.forEach(tab => tab.classList.remove('active'));
                 clickedTab.classList.add('active');
                 
-                // Hide all main containers first
                 boardContainer.style.display = 'none';
                 timeContainer.classList.add('hidden');
                 speedCheckContainer.classList.add('hidden');
@@ -1113,14 +1185,6 @@
                 
                 setupTabs();
 
-                // Populate Speed Check dropdowns
-                const taskSelect = document.getElementById('task-select');
-                const analysisTaskSelect = document.getElementById('analysis-task-select');
-                SPEED_CHECK_TASKS.forEach(task => {
-                    taskSelect.innerHTML += `<option value="${task}">${task}</option>`;
-                    analysisTaskSelect.innerHTML += `<option value="${task}">${task}</option>`;
-                });
-
                 // Listeners
                 document.getElementById('global-search-input').addEventListener('input', renderBoard);
 
@@ -1128,7 +1192,7 @@
                     workLogs = snapshot.val() || {};
                     calculateAverageTimes();
                     renderTimeComparisonTable();
-                    renderRateAnalysisReport(); // Update analysis if logs change
+                    renderRateAnalysisReport();
                 });
                 
                 db.ref('customers').on('value', (snapshot) => {
@@ -1149,7 +1213,7 @@
                     
                     renderBoard();
                     renderTimeComparisonTable();
-                    renderRateAnalysisReport(); // Update analysis if order data (like rates) changes
+                    renderRateAnalysisReport();
                 });
                 
                 db.ref('speedCheckLogs').on('value', (snapshot) => {
@@ -1158,7 +1222,22 @@
                     renderTodaySpeedLogs();
                     const selectedTask = document.getElementById('analysis-task-select').value;
                     if(selectedTask) renderAnalysis(selectedTask);
-                    renderRateAnalysisReport(); // Also update this report if speed logs change
+                    renderRateAnalysisReport();
+                });
+
+                db.ref('speedCheckTasks').on('value', async (snapshot) => {
+                    if (!snapshot.exists()) {
+                        // One-time migration
+                        const updates = {};
+                        INITIAL_SPEED_CHECK_TASKS.forEach(name => {
+                            const newKey = db.ref('speedCheckTasks').push().key;
+                            updates[newKey] = { id: newKey, name: name };
+                        });
+                        await db.ref('speedCheckTasks').set(updates);
+                    } else {
+                        speedCheckTasks = Object.values(snapshot.val() || {});
+                        renderSpeedCheckDropdowns();
+                    }
                 });
 
 
@@ -1183,6 +1262,48 @@
                 });
                 document.getElementById('sc-timer-stop-btn').addEventListener('click', stopSpeedCheckTimer);
                 document.getElementById('analysis-task-select').addEventListener('change', (e) => renderAnalysis(e.target.value));
+
+                // Manage tasks modal listeners
+                const manageTasksModal = document.getElementById('manage-tasks-modal');
+                document.getElementById('manage-tasks-btn').addEventListener('click', () => {
+                    renderManageTasksModal();
+                    manageTasksModal.classList.remove('hidden');
+                });
+                document.getElementById('close-manage-tasks-modal-btn').addEventListener('click', () => {
+                    manageTasksModal.classList.add('hidden');
+                });
+                document.getElementById('add-task-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const input = document.getElementById('new-task-name-input');
+                    const taskName = input.value.trim();
+                    addNewSpeedCheckTask(taskName);
+                    input.value = '';
+                });
+                document.getElementById('manage-tasks-list').addEventListener('click', (e) => {
+                    const taskDiv = e.target.closest('[data-task-id]');
+                    if (!taskDiv) return;
+                    const taskId = taskDiv.dataset.taskId;
+                    const taskNameSpan = taskDiv.querySelector('.task-name');
+
+                    if (e.target.classList.contains('delete-task-btn')) {
+                        deleteSpeedCheckTask(taskId, taskNameSpan.textContent);
+                    } else if (e.target.classList.contains('edit-task-btn')) {
+                        const currentName = taskNameSpan.textContent;
+                        taskDiv.innerHTML = `
+                            <input type="text" value="${currentName}" class="flex-grow border rounded-md px-2 py-1 text-sm">
+                            <div class="flex gap-2">
+                                <button class="save-edit-btn text-sm font-semibold text-green-600 hover:underline">Save</button>
+                                <button class="cancel-edit-btn text-sm font-semibold text-gray-500 hover:underline">Cancel</button>
+                            </div>
+                        `;
+                    } else if (e.target.classList.contains('save-edit-btn')) {
+                        const newName = taskDiv.querySelector('input').value.trim();
+                        updateSpeedCheckTask(taskId, newName);
+                    } else if (e.target.classList.contains('cancel-edit-btn')) {
+                        renderManageTasksModal(); // Just re-render to cancel
+                    }
+                });
+
 
             } catch (e) {
                 console.error(e);
