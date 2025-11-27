@@ -16,65 +16,14 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         :root {
             --board-bg: #f1f5f9; /* slate-100 */
-            --column-bg: #e2e8f0; /* slate-200 */
             --card-bg: #ffffff;
-            --card-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
-            --card-shadow-lifted: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
         }
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--board-bg);
-            overflow-x: hidden; /* Prevent horizontal scroll on mobile */
+            overflow-x: hidden;
         }
         
-        /* Desktop Kanban Board Layout (lg and up) */
-        @media (min-width: 1024px) {
-            body {
-                overflow-x: auto;
-            }
-            #board-container {
-                display: grid;
-                grid-auto-flow: column;
-                grid-auto-columns: 380px; /* A bit wider for desktop */
-                gap: 1.5rem;
-                min-height: calc(100vh - 120px);
-            }
-        }
-
-        .task-column {
-            background-color: var(--column-bg);
-            border-radius: 0.75rem;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .column-header {
-            padding-bottom: 0.75rem;
-            margin-bottom: 1rem;
-            border-bottom: 2px solid #cbd5e1; /* slate-300 */
-        }
-        .cards-container {
-            flex-grow: 1;
-            min-height: 200px;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            transition: background-color 0.2s ease-in-out;
-        }
-        .order-card {
-            background-color: var(--card-bg);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            box-shadow: var(--card-shadow);
-            transition: box-shadow 0.2s ease, transform 0.2s ease;
-        }
-
-        .sub-task {
-            border-top: 1px solid #e5e7eb;
-            padding-top: 0.75rem;
-            margin-top: 0.75rem;
-        }
         .timer-display {
             font-family: monospace;
             font-weight: bold;
@@ -83,7 +32,7 @@
             display: inline-block;
         }
 
-        /* Mobile Tab Styles */
+        /* Tab Styles */
         .mobile-tab {
             border-color: transparent;
             color: #64748b; /* slate-500 */
@@ -121,32 +70,17 @@
                 <p class="text-slate-500 text-sm sm:text-base">Track and time your orders from start to finish.</p>
             </div>
             <div class="flex items-center gap-4 w-full sm:w-auto">
-                 <div class="relative w-full sm:w-64">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
-                    </div>
-                    <input type="search" id="global-search-input" placeholder="Search orders..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
                 <a href="Admin.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 whitespace-nowrap">← Admin Panel</a>
             </div>
         </header>
         
-        <!-- Mobile Tab Navigation -->
-        <div id="mobile-tabs-container" class="mb-4 border-b border-gray-200 lg:hidden overflow-x-auto">
+        <!-- Tab Navigation -->
+        <div id="mobile-tabs-container" class="mb-4 border-b border-gray-200 overflow-x-auto">
             <nav class="-mb-px flex space-x-4" aria-label="Tabs">
-                <button class="mobile-tab active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="pending">
-                    Pending (<span class="count">0</span>)
-                </button>
-                <button class="mobile-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="in_progress">
-                    In Progress (<span class="count">0</span>)
-                </button>
-                <button class="mobile-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="completed_today">
-                    Completed (<span class="count">0</span>)
-                </button>
                 <button class="mobile-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="time_comparison">
                     Set Times
                 </button>
-                <button class="mobile-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="speed_check">
+                <button class="mobile-tab active whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="speed_check">
                     Speed Check
                 </button>
                  <button class="mobile-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm" data-status="rate_analysis">
@@ -155,39 +89,15 @@
             </nav>
         </div>
 
-        <div id="board-container" class="w-full">
-            <!-- PENDING COLUMN -->
-            <div class="task-column" data-status="pending">
-                <div class="column-header hidden lg:block">
-                    <h2 class="text-xl font-bold text-slate-700">Pending Orders (<span class="count">0</span>)</h2>
-                </div>
-                <div class="cards-container"></div>
-            </div>
-            <!-- IN PROGRESS COLUMN -->
-            <div class="task-column hidden lg:flex" data-status="in_progress">
-                <div class="column-header hidden lg:block">
-                    <h2 class="text-xl font-bold text-slate-700">In Progress (<span class="count">0</span>)</h2>
-                </div>
-                <div class="cards-container"></div>
-            </div>
-            <!-- COMPLETED COLUMN -->
-            <div class="task-column hidden lg:flex" data-status="completed_today">
-                <div class="column-header hidden lg:block">
-                    <h2 class="text-xl font-bold text-slate-700">Completed Today (<span class="count">0</span>)</h2>
-                </div>
-                <div class="cards-container"></div>
-            </div>
-        </div>
-
         <!-- TIME COMPARISON TABLE -->
         <div id="time-comparison-container" class="hidden w-full bg-white shadow-md rounded-lg overflow-x-auto mt-4">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Process Time</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Task</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Time</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Set ETA (mins)</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     </tr>
@@ -199,7 +109,7 @@
         </div>
 
         <!-- SPEED CHECK CONTAINER -->
-        <div id="speed-check-container" class="hidden w-full space-y-6">
+        <div id="speed-check-container" class="w-full space-y-6">
             <!-- Timer Section -->
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <div class="flex justify-between items-center mb-4">
@@ -260,7 +170,7 @@
         <div id="rate-analysis-container" class="hidden w-full bg-white shadow-md rounded-lg overflow-x-auto mt-4">
              <div class="p-4 border-b">
                 <h2 class="text-2xl font-bold text-slate-700">Task Profitability Analysis</h2>
-                <p class="text-sm text-slate-500">Tasks sorted by highest rate per hour.</p>
+                <p class="text-sm text-slate-500">Tasks sorted by highest rate per hour. Edit a rate to recalculate.</p>
             </div>
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -268,7 +178,7 @@
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task Name</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Times Logged</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Time</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Rate (₹)</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Master Rate (₹)</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-bold">Avg. Rate/Hour (₹)</th>
                     </tr>
                 </thead>
@@ -294,29 +204,11 @@
             </div>
             <form id="add-task-form" class="p-4 border-t flex gap-2">
                 <input type="text" id="new-task-name-input" class="w-full border rounded-md px-4 py-2" placeholder="Enter new task name..." required="" autocomplete="off">
+                <input type="number" id="new-task-rate-input" class="border rounded-md px-4 py-2 w-28" placeholder="Rate (₹)" required="">
                 <button type="submit" class="bg-indigo-600 text-white font-semibold rounded-md px-4 py-2 whitespace-nowrap">Add Task</button>
             </form>
         </div>
     </div>
-
-    <!-- Template for Order Card -->
-    <template id="order-card-template">
-        <div class="order-card">
-            <div class="flex justify-between items-start">
-                <p class="font-bold text-lg text-slate-800">Order #<span class="order-number"></span></p>
-                <span class="status-badge text-xs font-semibold px-2 py-1 rounded-full"></span>
-            </div>
-            <p class="text-sm text-slate-600 mt-1">For: <span class="customer-name font-medium"></span></p>
-            <p class="text-sm text-slate-500 mt-2 truncate description" title=""></p>
-            <div class="sub-tasks-container mt-3 space-y-3"></div>
-            <div class="completion-info-container hidden mt-4 pt-4 border-t">
-                 <p class="text-sm text-slate-600">Completed At: <span class="completion-time font-semibold text-green-700"></span></p>
-            </div>
-            <div class="card-actions-container mt-4 pt-4 border-t">
-                <!-- Action buttons will be injected here -->
-            </div>
-        </div>
-    </template>
 
     <script>
         const firebaseConfig = {
@@ -327,17 +219,14 @@
         };
         
         let db;
-        let activeTimers = {};
-        let workLogs = {};
         let allOrders = [];
-        let allCustomers = {};
-        let averageTaskTimes = {};
         
         // Speed Check State
         let speedCheckTimer = { startTime: 0, intervalId: null, taskName: '', isPaused: false, accumulatedMs: 0 };
         let scTimerState = 'stopped'; // 'stopped', 'running', 'paused'
         let allSpeedCheckLogs = [];
-        let speedCheckTasks = []; // Will be populated from Firebase
+        let speedCheckTasks = []; // Array of objects: { id, name, rate }
+        let speedCheckAverageTimes = {};
 
         const INITIAL_SPEED_CHECK_TASKS = [
             "Cutting suit without inner", "Cutting suit with inner", "Stitching suit with inner", 
@@ -365,468 +254,112 @@
             const seconds = totalSeconds % 60;
             return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
-
-        function getAverageTimeForTask(taskName) {
-            const avgMs = averageTaskTimes[taskName];
-            if (avgMs === undefined) return 'N/A';
-            return `~${formatMilliseconds(avgMs)}`;
-        }
         
-        async function updateOrderStatus(orderId, newStatus) {
-            const orderRef = db.ref(`orders/${orderId}`);
-            let updates = {};
-            let statusToSave = 'Pending';
-
-            if (newStatus === 'in_progress') {
-                statusToSave = 'In Progress';
-            } else if (newStatus === 'completed_today') {
-                statusToSave = 'Completed';
-                updates.completionTimestamp = firebase.database.ServerValue.TIMESTAMP;
-            }
-            
-            updates.status = statusToSave;
-            
-            try {
-                await orderRef.update(updates);
-                showToast(`Order #${orderId.slice(-4)} moved to ${statusToSave.replace(/_/g, ' ')}.`);
-            } catch (error) {
-                showToast("Error updating order status.");
-                console.error(error);
-            }
-        }
-
         // --- RENDER & DISPLAY LOGIC ---
-        function renderBoard() {
-            const query = document.getElementById('global-search-input') ? document.getElementById('global-search-input').value.toLowerCase().trim() : '';
-            
-            const filteredOrders = query ? allOrders.filter(order => {
-                const customerName = (allCustomers[order.customerMobile]?.name || '').toLowerCase();
-                const orderNumber = (order.orderNumber || '').toString().toLowerCase();
-
-                let description = '';
-                if (order.type === 'stitching' && Array.isArray(order.items) && order.items.length > 0) {
-                    description = order.items.map(item => `${item.name || 'Item'}`).join(' ').toLowerCase();
-                } else if (order.description) {
-                    description = order.description.toLowerCase();
-                }
-                
-                const taskNames = (order.tasks || []).map(t => t.name.toLowerCase()).join(' ');
-
-                return customerName.includes(query) || orderNumber.includes(query) || description.includes(query) || taskNames.includes(query);
-            }) : allOrders;
-
-
-            const columns = {
-                pending: document.querySelector('.task-column[data-status="pending"] .cards-container'),
-                in_progress: document.querySelector('.task-column[data-status="in_progress"] .cards-container'),
-                completed_today: document.querySelector('.task-column[data-status="completed_today"] .cards-container')
-            };
-
-            Object.values(columns).forEach(col => col.innerHTML = ''); // Clear columns
-
-            const today = new Date().setHours(0,0,0,0);
-
-            const pendingOrders = filteredOrders.filter(o => !o.status || o.status.toLowerCase() === 'pending');
-            const inProgressOrders = filteredOrders.filter(o => o.status && o.status.toLowerCase() === 'in progress');
-            const completedTodayOrders = filteredOrders.filter(o => {
-                return o.status && o.status.toLowerCase() === 'completed' && new Date(o.completionTimestamp || 0).setHours(0,0,0,0) === today;
-            });
-
-            pendingOrders.forEach(order => columns.pending.appendChild(createOrderCard(order)));
-            inProgressOrders.forEach(order => columns.in_progress.appendChild(createOrderCard(order)));
-            completedTodayOrders.forEach(order => columns.completed_today.appendChild(createOrderCard(order)));
-
-            // Update counts for both desktop headers and mobile tabs
-            document.querySelectorAll('[data-status="pending"] .count').forEach(el => el.textContent = pendingOrders.length);
-            document.querySelectorAll('[data-status="in_progress"] .count').forEach(el => el.textContent = inProgressOrders.length);
-            document.querySelectorAll('[data-status="completed_today"] .count').forEach(el => el.textContent = completedTodayOrders.length);
-        }
-
-        function createOrderCard(order) {
-            const template = document.getElementById('order-card-template');
-            const card = template.content.cloneNode(true).querySelector('.order-card');
-            
-            card.dataset.orderId = order.id;
-
-            card.querySelector('.order-number').textContent = order.orderNumber;
-            card.querySelector('.customer-name').textContent = allCustomers[order.customerMobile]?.name || 'Unknown';
-
-            let description = 'No details';
-            if (order.type === 'stitching' && Array.isArray(order.items) && order.items.length > 0) {
-                description = order.items.map(item => `${item.name || 'Item'} (Qty: ${item.quantity || 1})`).join(', ');
-            } else if (order.description) {
-                description = order.description;
-            }
-            card.querySelector('.description').textContent = description;
-            card.querySelector('.description').title = description;
-
-            // Status Badge & Actions
-            const statusBadge = card.querySelector('.status-badge');
-            const actionsContainer = card.querySelector('.card-actions-container');
-            const completionContainer = card.querySelector('.completion-info-container');
-            const status = (order.status || 'Pending').toLowerCase();
-            statusBadge.textContent = order.status || 'Pending';
-            
-            if (status === 'in progress' || status === 'pending') {
-                 renderSubTasks(card.querySelector('.sub-tasks-container'), order);
-            }
-
-            if (status === 'in progress') {
-                statusBadge.className += ' bg-blue-100 text-blue-800';
-                const completeBtn = document.createElement('button');
-                completeBtn.className = 'w-full bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600 text-sm';
-                completeBtn.textContent = 'Mark as Complete';
-                completeBtn.onclick = () => updateOrderStatus(order.id, 'completed_today');
-                actionsContainer.appendChild(completeBtn);
-            } else if (status === 'completed') {
-                statusBadge.className += ' bg-green-100 text-green-800';
-                actionsContainer.classList.add('hidden');
-                completionContainer.classList.remove('hidden');
-                card.querySelector('.completion-time').textContent = new Date(order.completionTimestamp).toLocaleString();
-            } else { // Pending
-                statusBadge.className += ' bg-yellow-100 text-yellow-800';
-                const startBtn = document.createElement('button');
-                startBtn.className = 'w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600 text-sm';
-                startBtn.textContent = 'Start Progress';
-                startBtn.onclick = () => updateOrderStatus(order.id, 'in_progress');
-                actionsContainer.appendChild(startBtn);
-            }
-
-            return card;
-        }
-
-        async function renderSubTasks(container, order) {
-            let tasks = order.tasks || [];
-
-            if (tasks.length === 0 && (order.status || 'pending').toLowerCase() !== 'completed') {
-                if (order.type === 'stitching') {
-                    tasks = [
-                        { name: 'Cutting', status: 'pending', loggedTimeMs: null },
-                        { name: 'Stitching', status: 'pending', loggedTimeMs: null },
-                        { name: 'Hemming', status: 'pending', loggedTimeMs: null },
-                        { name: 'Overlock', status: 'pending', loggedTimeMs: null },
-                        { name: 'Pressing', status: 'pending', loggedTimeMs: null }
-                    ];
-                } else { 
-                    tasks = [{ name: order.description || 'Main Task', status: 'pending', loggedTimeMs: null }];
-                }
-                await db.ref(`orders/${order.id}/tasks`).set(tasks);
-            }
-
-            container.innerHTML = tasks.map((task, index) => {
-                 const timerKey = `${order.id}-${index}`;
-                 const activeTimer = activeTimers[timerKey];
-                 let timerHtml = '';
-                 
-                 const status = (order.status || 'pending').toLowerCase();
-                 const isInteractive = status === 'in progress';
-
-                if (task.loggedTimeMs) {
-                    timerHtml = `<span class="text-green-600 font-bold">${formatMilliseconds(task.loggedTimeMs)}</span>`;
-                } else if (activeTimer && isInteractive) {
-                     if (activeTimer.isPaused) {
-                        timerHtml = `
-                            <div class="flex items-center gap-2">
-                                <span class="timer-display text-lg">${formatMilliseconds(activeTimer.accumulatedMs)}</span>
-                                <button class="resume-timer-btn bg-green-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-green-600" data-order-id="${order.id}" data-task-index="${index}">Resume</button>
-                                <button class="stop-timer-btn bg-red-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-red-600" data-order-id="${order.id}" data-task-index="${index}" data-task-name="${task.name}">Stop</button>
-                            </div>`;
-                     } else { // Running
-                         timerHtml = `
-                            <div class="flex items-center gap-2">
-                                <span class="timer-display text-lg">00:00</span>
-                                <button class="pause-timer-btn bg-yellow-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-yellow-600" data-order-id="${order.id}" data-task-index="${index}">Pause</button>
-                                <button class="stop-timer-btn bg-red-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-red-600" data-order-id="${order.id}" data-task-index="${index}" data-task-name="${task.name}">Stop</button>
-                            </div>`;
-                     }
-                } else if (isInteractive) { // Not started yet, but in progress
-                     timerHtml = `<button class="start-timer-btn bg-blue-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-blue-600" data-order-id="${order.id}" data-task-index="${index}" data-task-name="${task.name}">Start</button>`;
-                } else { // Pending or Completed order, timers not interactive
-                    timerHtml = `<span class="text-gray-400 text-sm">Not started</span>`;
-                }
-
-
-                return `
-                <div class="sub-task flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                    <div class="flex-grow w-full sm:w-auto">
-                        <input type="text" value="${task.name}" class="text-sm font-medium text-slate-700 w-full bg-transparent p-1 rounded hover:bg-slate-100 focus:bg-slate-100 focus:outline-none" onchange="updateTaskName('${order.id}', ${index}, this.value)">
-                        <div class="flex items-center justify-between mt-1">
-                            <span class="text-xs text-slate-500">Last Avg: <span class="font-semibold">${getAverageTimeForTask(task.name)}</span></span>
-                             <div class="flex items-center gap-1">
-                                <label for="rate-${order.id}-${index}" class="text-xs text-slate-500">Rate (₹)</label>
-                                <input id="rate-${order.id}-${index}" type="number" value="${task.rate || ''}" class="rate-input" onchange="updateTaskRate('${order.id}', ${index}, this.value)">
-                            </div>
-                        </div>
-                    </div>
-                    <div id="timer-cell-${order.id}-${index}" class="flex-shrink-0 mt-2 sm:mt-0">
-                        ${timerHtml}
-                    </div>
-                </div>
-            `}).join('');
-
-            attachTimerButtonListeners(container);
-        }
-
         function renderTimeComparisonTable() {
             const tbody = document.getElementById('time-comparison-body');
             if (!tbody) return;
             tbody.innerHTML = '';
             
-            const pendingOrders = allOrders.filter(o => !o.status || o.status.toLowerCase() === 'pending');
+            const activeOrders = allOrders.filter(o => o.pipelineStatus !== 'handover');
             
-            if (pendingOrders.length === 0) {
-                 tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-500">No pending orders to set times for.</td></tr>`;
+            if (activeOrders.length === 0) {
+                 tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-500">No active orders found.</td></tr>`;
                  return;
             }
 
-            pendingOrders.forEach(order => {
-                let tasks = order.tasks || [];
-                if (tasks.length === 0) {
-                    if (order.type === 'stitching') {
-                        tasks = [ { name: 'Cutting' }, { name: 'Stitching' }, { name: 'Hemming' }, { name: 'Overlock' }, { name: 'Pressing' } ];
-                    } else { tasks = [{ name: order.description || 'Main Task' }]; }
+            activeOrders.forEach(order => {
+                const assignedTaskName = order.assignedTaskName;
+                const avgMs = speedCheckAverageTimes[assignedTaskName];
+                const avgMins = avgMs ? Math.round(avgMs / 60000) : null;
+                const estimatedMins = order.estimatedMinutes;
+                
+                let statusHtml = '<span class="text-gray-400">Not Set</span>';
+                if (estimatedMins && avgMins !== null) {
+                    const tolerance = 0.20; // 20% tolerance
+                    const lowerBound = avgMins * (1 - tolerance);
+                    const upperBound = avgMins * (1 + tolerance);
+                    if (estimatedMins >= lowerBound && estimatedMins <= upperBound) {
+                        statusHtml = '<span class="font-semibold text-green-600">Target Done ✅</span>';
+                    } else {
+                        statusHtml = '<span class="font-semibold text-red-600">Target Not Done</span>';
+                    }
+                } else if (estimatedMins) {
+                    statusHtml = '<span class="text-blue-600">ETA Set</span>';
                 }
 
-                tasks.forEach((task, index) => {
-                    const avgMs = averageTaskTimes[task.name];
-                    const avgMins = avgMs ? Math.round(avgMs / 60000) : null;
-                    const estimatedMins = task.estimatedMinutes;
-                    
-                    let statusHtml = '<span class="text-gray-400">Not Set</span>';
-                    if (estimatedMins && avgMins !== null) {
-                        const tolerance = 0.20; // 20% tolerance
-                        const lowerBound = avgMins * (1 - tolerance);
-                        const upperBound = avgMins * (1 + tolerance);
-                        if (estimatedMins >= lowerBound && estimatedMins <= upperBound) {
-                            statusHtml = '<span class="font-semibold text-green-600">Target Done ✅</span>';
-                        } else {
-                            statusHtml = '<span class="font-semibold text-red-600">Target Not Done</span>';
-                        }
-                    } else if (estimatedMins) {
-                        statusHtml = '<span class="text-blue-600">ETA Set</span>';
-                    }
+                const taskOptions = speedCheckTasks.map(task => 
+                    `<option value="${task.name}" ${assignedTaskName === task.name ? 'selected' : ''}>${task.name}</option>`
+                ).join('');
 
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap font-mono">#${order.orderNumber}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">${allCustomers[order.customerMobile]?.name || 'Unknown'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700">${task.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap font-mono">${avgMins !== null ? `${avgMins} min` : 'N/A'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <input type="number" class="eta-input w-24 border-gray-300 rounded-md shadow-sm text-sm" value="${estimatedMins || ''}" placeholder="e.g., 20">
-                                <button class="save-eta-btn bg-indigo-600 text-white text-xs font-bold py-1 px-3 rounded hover:bg-indigo-700" data-order-id="${order.id}" data-task-index="${index}">Save</button>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">${statusHtml}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-mono text-sm">#${order.orderNumber}</div>
+                        <div class="text-xs text-slate-500">${order.customerName || 'Unknown'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">${order.description || (order.items || []).map(i=>i.item).join(', ')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <select class="assigned-task-select w-full border-gray-300 rounded-md shadow-sm text-sm p-2">
+                            <option value="">-- Assign Task --</option>
+                            ${taskOptions}
+                        </select>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono avg-time-cell">${avgMins !== null ? `${avgMins} min` : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center gap-2">
+                            <input type="number" class="eta-input w-24 border-gray-300 rounded-md shadow-sm text-sm p-2" value="${estimatedMins || ''}" placeholder="e.g., 20">
+                            <button class="save-eta-btn bg-indigo-600 text-white text-xs font-bold py-2 px-3 rounded hover:bg-indigo-700" data-order-id="${order.id}">Save</button>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${statusHtml}</td>
+                `;
+                tbody.appendChild(row);
             });
         }
 
         // --- DATA & TIMER LOGIC ---
-        function calculateAverageTimes() {
+        function calculateSpeedCheckAverages() {
             const groupedLogs = {};
-            Object.values(workLogs).forEach(log => {
-                if (!log.subTaskName || !log.durationMs) return;
-                if (!groupedLogs[log.subTaskName]) {
-                    groupedLogs[log.subTaskName] = { totalMs: 0, count: 0 };
+            allSpeedCheckLogs.forEach(log => {
+                if (!log.taskName || !log.durationMs) return;
+                if (!groupedLogs[log.taskName]) {
+                    groupedLogs[log.taskName] = { totalMs: 0, count: 0 };
                 }
-                groupedLogs[log.subTaskName].totalMs += log.durationMs;
-                groupedLogs[log.subTaskName].count++;
+                groupedLogs[log.taskName].totalMs += log.durationMs;
+                groupedLogs[log.taskName].count++;
             });
 
-            averageTaskTimes = {};
+            speedCheckAverageTimes = {};
             for (const taskName in groupedLogs) {
-                averageTaskTimes[taskName] = groupedLogs[taskName].totalMs / groupedLogs[taskName].count;
+                speedCheckAverageTimes[taskName] = groupedLogs[taskName].totalMs / groupedLogs[taskName].count;
             }
         }
         
-        function attachTimerButtonListeners(container) {
-             container.addEventListener('click', (e) => {
-                const btn = e.target.closest('button');
-                if (!btn) return;
+        async function saveOrderTaskInfo(orderId, assignedTaskName, etaMinutes) {
+            const etaMinsValue = parseInt(etaMinutes, 10);
 
-                const { orderId, taskIndex, taskName } = btn.dataset;
-                if (!orderId || !taskIndex) return;
-
-                if (btn.classList.contains('start-timer-btn')) {
-                    startTimer(orderId, parseInt(taskIndex), taskName);
-                } else if (btn.classList.contains('stop-timer-btn')) {
-                    stopTimer(orderId, parseInt(taskIndex), taskName);
-                } else if (btn.classList.contains('pause-timer-btn')) {
-                    pauseTimer(orderId, parseInt(taskIndex));
-                } else if (btn.classList.contains('resume-timer-btn')) {
-                    resumeTimer(orderId, parseInt(taskIndex));
-                }
-            });
-        }
-
-        function startTimer(orderId, taskIndex, taskName) {
-            const timerKey = `${orderId}-${taskIndex}`;
-            if (activeTimers[timerKey] || Object.keys(activeTimers).length > 0) {
-                 showToast("Another timer is already running. Please stop it first.");
-                 return;
-            }
-
-            const startTime = Date.now();
-            const intervalId = setInterval(() => {
-                const timerCell = document.getElementById(`timer-cell-${timerKey}`);
-                if (!timerCell) {
-                    clearInterval(intervalId);
-                    return;
-                }
-                const timerDisplay = timerCell.querySelector('.timer-display');
-                if (timerDisplay) {
-                     const timer = activeTimers[timerKey];
-                     if(timer && !timer.isPaused) {
-                        const elapsed = timer.accumulatedMs + (Date.now() - timer.startTime);
-                        timerDisplay.textContent = formatMilliseconds(elapsed);
-                     }
-                }
-            }, 1000);
-
-            activeTimers[timerKey] = { startTime, intervalId, taskName, orderId, taskIndex, accumulatedMs: 0, isPaused: false };
-            
-            renderBoard(); // Re-render to show updated buttons
-        }
-
-        function pauseTimer(orderId, taskIndex) {
-            const timerKey = `${orderId}-${taskIndex}`;
-            const timer = activeTimers[timerKey];
-            if (!timer || timer.isPaused) return;
-
-            clearInterval(timer.intervalId);
-            timer.accumulatedMs += Date.now() - timer.startTime;
-            timer.isPaused = true;
-            timer.intervalId = null; 
-            renderBoard();
-        }
-
-        function resumeTimer(orderId, taskIndex) {
-            const timerKey = `${orderId}-${taskIndex}`;
-            const timer = activeTimers[timerKey];
-            if (!timer || !timer.isPaused) return;
-
-            timer.startTime = Date.now();
-            timer.isPaused = false;
-            
-            const intervalId = setInterval(() => {
-                const timerCell = document.getElementById(`timer-cell-${timerKey}`);
-                if (!timerCell) {
-                    clearInterval(intervalId);
-                    return;
-                }
-                const timerDisplay = timerCell.querySelector('.timer-display');
-                 if (timerDisplay) {
-                     const currentTimer = activeTimers[timerKey];
-                     if(currentTimer && !currentTimer.isPaused) {
-                        const elapsed = currentTimer.accumulatedMs + (Date.now() - currentTimer.startTime);
-                        timerDisplay.textContent = formatMilliseconds(elapsed);
-                     }
-                }
-            }, 1000);
-            timer.intervalId = intervalId;
-            renderBoard();
-        }
-
-        async function stopTimer(orderId, taskIndex, taskName) {
-            const timerKey = `${orderId}-${taskIndex}`;
-            const timer = activeTimers[timerKey];
-            if (!timer) return;
-
-            clearInterval(timer.intervalId);
-            const durationMs = timer.accumulatedMs + (timer.isPaused ? 0 : (Date.now() - timer.startTime));
-
-            try {
-                await db.ref('workTimeLogs').push({
-                    orderId: orderId,
-                    orderNumber: allOrders.find(o=>o.id === orderId)?.orderNumber || 'N/A',
-                    subTaskName: taskName,
-                    durationMs: durationMs,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
-
-                await db.ref(`orders/${orderId}/tasks/${taskIndex}`).update({
-                    status: 'completed',
-                    loggedTimeMs: durationMs
-                });
-
-                showToast(`Logged ${formatMilliseconds(durationMs)} for "${taskName}"`);
-            } catch (error) {
-                showToast("Error logging time.");
-                console.error("Error saving work log:", error);
-            }
-
-            delete activeTimers[timerKey];
-        }
-        
-        async function updateTaskName(orderId, taskIndex, newName) {
-            if (!newName.trim()) {
-                showToast("Task name cannot be empty.");
+            if (!assignedTaskName) {
+                showToast("Please assign a task before saving.");
                 return;
             }
-            try {
-                await db.ref(`orders/${orderId}/tasks/${taskIndex}/name`).set(newName.trim());
-                showToast("Task name updated.");
-            } catch(e) {
-                showToast("Error updating task name.");
-                console.error(e);
-            }
-        }
-        window.updateTaskName = updateTaskName;
-
-         async function updateTaskRate(orderId, taskIndex, rate) {
-            const rateValue = parseFloat(rate);
-            if (isNaN(rateValue) || rateValue < 0) {
-                showToast("Please enter a valid rate.");
-                return;
-            }
-            try {
-                await db.ref(`orders/${orderId}/tasks/${taskIndex}/rate`).set(rateValue);
-            } catch(e) {
-                showToast("Error saving rate.");
-                console.error(e);
-            }
-        }
-        window.updateTaskRate = updateTaskRate;
-
-
-        async function saveTaskEta(orderId, taskIndex, etaMinutes) {
-            const etaValue = parseInt(etaMinutes, 10);
-            if (isNaN(etaValue) || etaValue < 0) {
+            if (isNaN(etaMinsValue) || etaMinsValue <= 0) {
                 showToast("Please enter a valid number for minutes.");
                 return;
             }
             
-            const orderRef = db.ref(`orders/${orderId}`);
-            const orderSnapshot = await orderRef.once('value');
-
-            if (!orderSnapshot.exists()) {
-                showToast("Could not find the order. It may have been updated or removed.");
-                console.error(`Order with ID ${orderId} not found in Firebase when trying to save ETA.`);
-                return;
-            }
-            const order = orderSnapshot.val();
-
-            let tasks = order.tasks || [];
-            if (tasks.length === 0) {
-                 if (order.type === 'stitching') {
-                    tasks = [ { name: 'Cutting' }, { name: 'Stitching' }, { name: 'Hemming' }, { name: 'Overlock' }, { name: 'Pressing' } ];
-                } else { tasks = [{ name: order.description || 'Main Task' }]; }
-            }
-            
-            if (!tasks[taskIndex]) tasks[taskIndex] = {};
-            tasks[taskIndex].estimatedMinutes = etaValue;
-            if (!tasks[taskIndex].name) tasks[taskIndex].name = 'Unnamed Task';
-            if (!tasks[taskIndex].status) tasks[taskIndex].status = 'pending';
+            const etaMs = etaMinsValue * 60000;
+            const updates = {
+                assignedTaskName: assignedTaskName,
+                estimatedMinutes: etaMinsValue,
+                estimatedCompletionTimestamp: Date.now() + etaMs
+            };
 
             try {
-                await db.ref(`orders/${orderId}/tasks`).set(tasks);
-                showToast("ETA saved successfully.");
+                await db.ref(`orders/${orderId}`).update(updates);
+                showToast("Order task info saved successfully.");
             } catch (e) {
-                showToast("Error saving ETA.");
+                showToast("Error saving order info.");
                 console.error(e);
             }
         }
@@ -840,11 +373,14 @@
             taskSelect.innerHTML = '';
             analysisTaskSelect.innerHTML = '<option value="">-- Select a task --</option>';
 
-            speedCheckTasks.forEach(task => {
+            speedCheckTasks.sort((a,b) => a.name.localeCompare(b.name)).forEach(task => {
                 taskSelect.innerHTML += `<option value="${task.name}">${task.name}</option>`;
                 analysisTaskSelect.innerHTML += `<option value="${task.name}">${task.name}</option>`;
             });
             analysisTaskSelect.value = savedValue;
+            
+            // Trigger change event to pre-fill rate for the first item
+            taskSelect.dispatchEvent(new Event('change'));
         }
 
         function startSpeedCheckTimer() {
@@ -955,7 +491,6 @@
             document.getElementById('sc-timer-stop-btn').classList.add('hidden');
             document.getElementById('task-select').disabled = false;
             rateInput.disabled = false;
-            rateInput.value = '';
         }
 
         function renderTodaySpeedLogs() {
@@ -1043,282 +578,259 @@
             const tbody = document.getElementById('rate-analysis-body');
             tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">Calculating analysis...</td></tr>`;
             
-            const allLogs = [...Object.values(workLogs), ...allSpeedCheckLogs]; // Combine logs from both sources
             const tasksSummary = {};
 
-            allLogs.forEach(log => {
-                if (!log || (!log.subTaskName && !log.taskName)) return;
+            // Summarize log data (time and count) from speed check logs
+            allSpeedCheckLogs.forEach(log => {
+                if (!log || !log.taskName || !log.durationMs) return;
+                const taskName = log.taskName;
                 
-                let logRate = log.rate;
-
-                if (log.orderId) {
-                    const order = allOrders.find(o => o.id === log.orderId);
-                    if (order && order.tasks) {
-                        const task = order.tasks.find(t => t.name === log.subTaskName);
-                        if (task && task.rate) {
-                            logRate = task.rate;
-                        }
-                    }
-                }
-                
-                const taskName = log.subTaskName || log.taskName;
-                if (!taskName || !logRate) return;
-
                 if (!tasksSummary[taskName]) {
-                    tasksSummary[taskName] = { name: taskName, totalMs: 0, totalRate: 0, count: 0 };
+                    tasksSummary[taskName] = { totalMs: 0, count: 0 };
                 }
-                
-                tasksSummary[taskName].totalMs += (log.durationMs || 0);
-                tasksSummary[taskName].totalRate += (parseFloat(logRate) || 0);
+                tasksSummary[taskName].totalMs += log.durationMs;
                 tasksSummary[taskName].count++;
             });
 
-            const analysisResults = Object.values(tasksSummary).map(summary => {
+            const analysisData = speedCheckTasks.map(task => {
+                const summary = tasksSummary[task.name];
+                if (!summary) return null; // Only include tasks that have been logged
+
                 const avgMs = summary.totalMs / summary.count;
-                const avgRate = summary.totalRate / summary.count;
-                const ratePerHour = avgMs > 0 ? (avgRate / avgMs) * 3600000 : 0;
-                return { ...summary, avgMs, avgRate, ratePerHour };
-            });
-            
-            analysisResults.sort((a, b) => b.ratePerHour - a.ratePerHour);
-            
-            if (analysisResults.length === 0) {
-                 tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">No completed tasks with rates found to analyze.</td></tr>`;
-                 return;
+                const masterRate = task.rate || 0;
+                const ratePerHour = avgMs > 0 ? (masterRate / (avgMs / 3600000)) : 0;
+
+                return { 
+                    taskId: task.id,
+                    taskName: task.name, 
+                    logCount: summary.count, 
+                    avgMs, 
+                    masterRate, 
+                    ratePerHour 
+                };
+            }).filter(Boolean);
+
+            if (analysisData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">No timed tasks with master rates found.</td></tr>`;
+                return;
             }
 
-            tbody.innerHTML = analysisResults.map(res => `
+            // Sort by highest rate per hour
+            analysisData.sort((a, b) => b.ratePerHour - a.ratePerHour);
+            
+            tbody.innerHTML = analysisData.map(data => `
                 <tr class="hover:bg-slate-50">
-                    <td class="px-6 py-4 font-bold text-slate-800">${res.name}</td>
-                    <td class="px-6 py-4 text-slate-600">${res.count}</td>
-                    <td class="px-6 py-4 font-mono">${formatMilliseconds(res.avgMs)}</td>
-                    <td class="px-6 py-4 font-mono">₹${res.avgRate.toFixed(2)}</td>
-                    <td class="px-6 py-4 font-mono font-bold text-lg text-indigo-700">₹${res.ratePerHour.toFixed(2)}</td>
+                    <td class="px-6 py-4 font-medium text-slate-800">${data.taskName}</td>
+                    <td class="px-6 py-4 text-slate-600 text-center">${data.logCount}</td>
+                    <td class="px-6 py-4 text-slate-600 font-mono">${formatMilliseconds(data.avgMs)}</td>
+                    <td class="px-6 py-4">
+                        <input type="number" value="${data.masterRate}" class="rate-input w-24 text-right master-rate-analysis-input" data-task-id="${data.taskId}">
+                    </td>
+                    <td class="px-6 py-4 font-bold font-mono text-lg text-green-700">₹${data.ratePerHour.toFixed(2)}</td>
                 </tr>
             `).join('');
         }
 
-        // --- MANAGE SPEED CHECK TASKS ---
+        // --- MANAGE TASKS MODAL ---
         function renderManageTasksModal() {
+            const modal = document.getElementById('manage-tasks-modal');
             const listContainer = document.getElementById('manage-tasks-list');
-            listContainer.innerHTML = speedCheckTasks.map((task, index) => `
-                <div class="flex items-center justify-between p-2 bg-slate-100 rounded-md" data-task-id="${task.id}">
-                    <div class="flex items-center gap-2 flex-grow">
-                        <span class="font-semibold text-slate-500 w-6">${index + 1}.</span>
-                        <span class="task-name flex-grow">${task.name}</span>
-                    </div>
-                    <div class="task-actions flex gap-2 flex-shrink-0">
-                        <button class="edit-task-btn text-sm font-semibold text-blue-600 hover:underline">Edit</button>
-                        <button class="delete-task-btn text-sm font-semibold text-red-600 hover:underline">Delete</button>
-                    </div>
+            
+            listContainer.innerHTML = speedCheckTasks.sort((a,b) => a.name.localeCompare(b.name)).map(task => `
+                <div class="flex items-center justify-between p-2 bg-gray-100 rounded gap-2">
+                    <span class="font-medium flex-grow">${task.name}</span>
+                    <input type="number" value="${task.rate || 0}" class="rate-input w-20 text-right modal-rate-input" data-task-id="${task.id}" placeholder="Rate (₹)">
+                    <button class="delete-task-btn p-1 text-red-500 hover:bg-red-100 rounded-full" data-task-id="${task.id}" aria-label="Delete task">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                    </button>
                 </div>
             `).join('');
         }
-        
-        async function addNewSpeedCheckTask(taskName) {
-            if (!taskName) return;
-            const newTaskRef = db.ref('speedCheckTasks').push();
-            await newTaskRef.set({ id: newTaskRef.key, name: taskName });
-            showToast(`Task "${taskName}" added.`);
-        }
 
-        async function updateSpeedCheckTask(taskId, newName) {
-            if (!taskId || !newName) return;
-            await db.ref(`speedCheckTasks/${taskId}/name`).set(newName);
-             showToast(`Task updated.`);
-        }
 
-        async function deleteSpeedCheckTask(taskId, taskName) {
-            if (!taskId) return;
-            if (confirm(`Are you sure you want to delete the task "${taskName}"?`)) {
-                 await db.ref(`speedCheckTasks/${taskId}`).remove();
-                 showToast(`Task deleted.`);
+        // --- FIREBASE INITIALIZATION & LISTENERS ---
+        async function initializeSpeedCheck() {
+            const taskSelect = document.getElementById('task-select');
+            
+            db.ref('speedCheckTasks').on('value', (snapshot) => {
+                const tasksData = snapshot.val() || {};
+                speedCheckTasks = Object.entries(tasksData).map(([key, value]) => ({ id: key, ...value }));
+
+                renderSpeedCheckDropdowns();
+                renderManageTasksModal();
+                renderTimeComparisonTable(); // Re-render table with updated task list for dropdowns
+                if (document.querySelector('.mobile-tab.active')?.dataset.status === 'rate_analysis') {
+                    renderRateAnalysisReport();
+                }
+            });
+
+            const tasksSnap = await db.ref('speedCheckTasks').once('value');
+            if (!tasksSnap.val()) {
+                showToast("Initializing default tasks...");
+                const updates = {};
+                INITIAL_SPEED_CHECK_TASKS.forEach(taskName => {
+                    const newTaskKey = db.ref('speedCheckTasks').push().key;
+                    updates[newTaskKey] = { name: taskName, rate: 50 };
+                });
+                await db.ref('speedCheckTasks').update(updates);
             }
-        }
-
-        // --- INITIALIZATION & Mobile Tab Setup ---
-        function setupTabs() {
-            const tabsContainer = document.getElementById('mobile-tabs-container');
-            if (!tabsContainer) return;
-
-            const tabs = tabsContainer.querySelectorAll('.mobile-tab');
-            const boardContainer = document.getElementById('board-container');
-            const timeContainer = document.getElementById('time-comparison-container');
-            const speedCheckContainer = document.getElementById('speed-check-container');
-            const rateAnalysisContainer = document.getElementById('rate-analysis-container');
-            const columns = document.querySelectorAll('.task-column');
-
-            tabsContainer.addEventListener('click', (e) => {
-                const clickedTab = e.target.closest('.mobile-tab');
-                if (!clickedTab) return;
-
-                const status = clickedTab.dataset.status;
-
-                tabs.forEach(tab => tab.classList.remove('active'));
-                clickedTab.classList.add('active');
-                
-                boardContainer.style.display = 'none';
-                timeContainer.classList.add('hidden');
-                speedCheckContainer.classList.add('hidden');
-                rateAnalysisContainer.classList.add('hidden');
-                
-                if (status === 'time_comparison') {
-                    timeContainer.classList.remove('hidden');
-                } else if (status === 'speed_check') {
-                    speedCheckContainer.classList.remove('hidden');
-                } else if (status === 'rate_analysis') {
-                    rateAnalysisContainer.classList.remove('hidden');
-                    renderRateAnalysisReport(); // Recalculate when tab is viewed
-                } else {
-                    boardContainer.style.display = 'grid';
-                    columns.forEach(col => {
-                        if (col.dataset.status === status) {
-                            col.classList.remove('hidden');
-                            col.classList.add('flex');
-                        } else {
-                            col.classList.add('hidden');
-                            col.classList.remove('flex');
-                        }
-                    });
+            
+            taskSelect.addEventListener('change', (e) => {
+                const selectedTaskName = e.target.value;
+                const task = speedCheckTasks.find(t => t.name === selectedTaskName);
+                const rateInput = document.getElementById('task-rate-input');
+                if (task && rateInput) {
+                    rateInput.value = task.rate || '';
                 }
             });
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
+
+        document.addEventListener('DOMContentLoaded', () => {
             try {
-                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                firebase.initializeApp(firebaseConfig);
                 db = firebase.database();
-                
-                setupTabs();
-
-                // Listeners
-                document.getElementById('global-search-input').addEventListener('input', renderBoard);
-
-                db.ref('workTimeLogs').on('value', (snapshot) => {
-                    workLogs = snapshot.val() || {};
-                    calculateAverageTimes();
-                    renderTimeComparisonTable();
-                    renderRateAnalysisReport();
-                });
-                
-                db.ref('customers').on('value', (snapshot) => {
-                    const customersVal = snapshot.val() || {};
-                    allCustomers = Object.values(customersVal).reduce((acc, customer) => {
-                        if (customer.mobile) acc[customer.mobile] = customer;
-                        return acc;
-                    }, {});
-                });
 
                 db.ref('orders').on('value', (snapshot) => {
-                    const ordersVal = snapshot.val() || {};
-                    allOrders = Object.entries(ordersVal)
-                        .map(([id, value]) => ({ id, ...value }))
-                        .filter(o => o.orderNumber && (o.type === 'stitching' || o.type === 'alteration'));
-                    
-                    allOrders.sort((a,b) => (a.orderNumber || 0) - (b.orderNumber || 0));
-                    
-                    renderBoard();
-                    renderTimeComparisonTable();
-                    renderRateAnalysisReport();
+                    const ordersData = snapshot.val() || {};
+                    allOrders = Object.entries(ordersData).map(([key, value]) => ({ id: key, ...value }));
+                    if (document.querySelector('.mobile-tab.active')?.dataset.status === 'time_comparison') {
+                        renderTimeComparisonTable();
+                    }
                 });
                 
-                db.ref('speedCheckLogs').on('value', (snapshot) => {
+                db.ref('speedCheckLogs').on('value', snapshot => {
                     const logs = snapshot.val() || {};
-                    allSpeedCheckLogs = Object.values(logs);
+                    allSpeedCheckLogs = Object.values(logs).map(log => ({ ...log }));
+                    
+                    calculateSpeedCheckAverages();
                     renderTodaySpeedLogs();
-                    const selectedTask = document.getElementById('analysis-task-select').value;
-                    if(selectedTask) renderAnalysis(selectedTask);
-                    renderRateAnalysisReport();
-                });
+                    renderAnalysis(document.getElementById('analysis-task-select').value);
 
-                db.ref('speedCheckTasks').on('value', async (snapshot) => {
-                    if (!snapshot.exists()) {
-                        // One-time migration
-                        const updates = {};
-                        INITIAL_SPEED_CHECK_TASKS.forEach(name => {
-                            const newKey = db.ref('speedCheckTasks').push().key;
-                            updates[newKey] = { id: newKey, name: name };
-                        });
-                        await db.ref('speedCheckTasks').set(updates);
-                    } else {
-                        speedCheckTasks = Object.values(snapshot.val() || {});
-                        renderSpeedCheckDropdowns();
+                    if (document.querySelector('.mobile-tab.active')?.dataset.status === 'rate_analysis') {
+                         renderRateAnalysisReport();
                     }
-                });
-
-
-                document.getElementById('time-comparison-body').addEventListener('click', (e) => {
-                    if (e.target.classList.contains('save-eta-btn')) {
-                        const button = e.target;
-                        const { orderId, taskIndex } = button.dataset;
-                        const input = button.closest('td').querySelector('.eta-input');
-                        saveTaskEta(orderId, parseInt(taskIndex), input.value);
+                    if (document.querySelector('.mobile-tab.active')?.dataset.status === 'time_comparison') {
+                         renderTimeComparisonTable();
                     }
                 });
                 
-                // Speed check listeners
-                document.getElementById('sc-timer-control-btn').addEventListener('click', () => {
-                    if (scTimerState === 'stopped') {
-                        startSpeedCheckTimer();
-                    } else if (scTimerState === 'running') {
-                        pauseSpeedCheckTimer();
-                    } else if (scTimerState === 'paused') {
-                        resumeSpeedCheckTimer();
+                initializeSpeedCheck();
+                
+                // ETA save buttons
+                document.getElementById('time-comparison-body').addEventListener('click', (e) => {
+                    if(e.target.classList.contains('save-eta-btn')) {
+                        const { orderId } = e.target.dataset;
+                        const row = e.target.closest('tr');
+                        const assignedTaskName = row.querySelector('.assigned-task-select').value;
+                        const etaMinutes = row.querySelector('.eta-input').value;
+                        saveOrderTaskInfo(orderId, assignedTaskName, etaMinutes);
                     }
+                });
+                
+                // Update average time dynamically when task is assigned
+                document.getElementById('time-comparison-body').addEventListener('change', e => {
+                    if (e.target.classList.contains('assigned-task-select')) {
+                        const selectedTask = e.target.value;
+                        const avgMs = speedCheckAverageTimes[selectedTask];
+                        const avgMins = avgMs ? Math.round(avgMs / 60000) : null;
+                        const avgTimeCell = e.target.closest('tr').querySelector('.avg-time-cell');
+                        avgTimeCell.textContent = avgMins !== null ? `${avgMins} min` : 'N/A';
+                    }
+                });
+
+                // Tab switching logic
+                const mobileTabs = document.getElementById('mobile-tabs-container');
+                const timeComparisonContainer = document.getElementById('time-comparison-container');
+                const speedCheckContainer = document.getElementById('speed-check-container');
+                const rateAnalysisContainer = document.getElementById('rate-analysis-container');
+                
+                mobileTabs.addEventListener('click', (e) => {
+                    if (e.target.closest('.mobile-tab')) {
+                        const tab = e.target.closest('.mobile-tab');
+                        document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        
+                        const status = tab.dataset.status;
+                        
+                        timeComparisonContainer.classList.toggle('hidden', status !== 'time_comparison');
+                        speedCheckContainer.classList.toggle('hidden', status !== 'speed_check');
+                        rateAnalysisContainer.classList.toggle('hidden', status !== 'rate_analysis');
+                        
+                        if (status === 'time_comparison') {
+                            renderTimeComparisonTable();
+                        } else if (status === 'rate_analysis') {
+                            renderRateAnalysisReport();
+                        }
+                    }
+                });
+
+                // Speed Check Timer Controls
+                document.getElementById('sc-timer-control-btn').addEventListener('click', () => {
+                    if (scTimerState === 'stopped') startSpeedCheckTimer();
+                    else if (scTimerState === 'running') pauseSpeedCheckTimer();
+                    else if (scTimerState === 'paused') resumeSpeedCheckTimer();
                 });
                 document.getElementById('sc-timer-stop-btn').addEventListener('click', stopSpeedCheckTimer);
                 document.getElementById('analysis-task-select').addEventListener('change', (e) => renderAnalysis(e.target.value));
 
-                // Manage tasks modal listeners
+                // Manage Tasks Modal
                 const manageTasksModal = document.getElementById('manage-tasks-modal');
-                document.getElementById('manage-tasks-btn').addEventListener('click', () => {
-                    renderManageTasksModal();
-                    manageTasksModal.classList.remove('hidden');
-                });
-                document.getElementById('close-manage-tasks-modal-btn').addEventListener('click', () => {
-                    manageTasksModal.classList.add('hidden');
-                });
-                document.getElementById('add-task-form').addEventListener('submit', (e) => {
+                const addTaskForm = document.getElementById('add-task-form');
+                
+                document.getElementById('manage-tasks-btn').addEventListener('click', () => manageTasksModal.classList.remove('hidden'));
+                document.getElementById('close-manage-tasks-modal-btn').addEventListener('click', () => manageTasksModal.classList.add('hidden'));
+                
+                addTaskForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    const input = document.getElementById('new-task-name-input');
-                    const taskName = input.value.trim();
-                    addNewSpeedCheckTask(taskName);
-                    input.value = '';
-                });
-                document.getElementById('manage-tasks-list').addEventListener('click', (e) => {
-                    const taskDiv = e.target.closest('[data-task-id]');
-                    if (!taskDiv) return;
-                    const taskId = taskDiv.dataset.taskId;
-                    const taskNameSpan = taskDiv.querySelector('.task-name');
-
-                    if (e.target.classList.contains('delete-task-btn')) {
-                        deleteSpeedCheckTask(taskId, taskNameSpan.textContent);
-                    } else if (e.target.classList.contains('edit-task-btn')) {
-                        const currentName = taskNameSpan.textContent;
-                        taskDiv.innerHTML = `
-                            <input type="text" value="${currentName}" class="flex-grow border rounded-md px-2 py-1 text-sm">
-                            <div class="flex gap-2">
-                                <button class="save-edit-btn text-sm font-semibold text-green-600 hover:underline">Save</button>
-                                <button class="cancel-edit-btn text-sm font-semibold text-gray-500 hover:underline">Cancel</button>
-                            </div>
-                        `;
-                    } else if (e.target.classList.contains('save-edit-btn')) {
-                        const newName = taskDiv.querySelector('input').value.trim();
-                        updateSpeedCheckTask(taskId, newName);
-                    } else if (e.target.classList.contains('cancel-edit-btn')) {
-                        renderManageTasksModal(); // Just re-render to cancel
+                    const taskName = document.getElementById('new-task-name-input').value.trim();
+                    const taskRate = parseFloat(document.getElementById('new-task-rate-input').value);
+                    if (taskName && !isNaN(taskRate)) {
+                        await db.ref('speedCheckTasks').push({ name: taskName, rate: taskRate });
+                        addTaskForm.reset();
+                    } else {
+                        showToast("Please enter a valid name and rate.");
                     }
                 });
 
+                document.getElementById('manage-tasks-list').addEventListener('click', async (e) => {
+                    if (e.target.closest('.delete-task-btn')) {
+                        const taskId = e.target.closest('.delete-task-btn').dataset.taskId;
+                        if (confirm('Are you sure you want to delete this task?')) {
+                            await db.ref(`speedCheckTasks/${taskId}`).remove();
+                            showToast('Task deleted.');
+                        }
+                    }
+                });
+                
+                document.getElementById('manage-tasks-list').addEventListener('change', async (e) => {
+                    if (e.target.classList.contains('modal-rate-input')) {
+                        const taskId = e.target.dataset.taskId;
+                        const newRate = parseFloat(e.target.value);
+                        if (!isNaN(newRate)) {
+                            await db.ref(`speedCheckTasks/${taskId}/rate`).set(newRate);
+                        }
+                    }
+                });
+
+                 document.getElementById('rate-analysis-body').addEventListener('change', async (e) => {
+                    if (e.target.classList.contains('master-rate-analysis-input')) {
+                        const taskId = e.target.dataset.taskId;
+                        const newRate = parseFloat(e.target.value);
+                        if (taskId && !isNaN(newRate)) {
+                            await db.ref(`speedCheckTasks/${taskId}/rate`).set(newRate);
+                            showToast('Master rate updated.');
+                        }
+                    }
+                });
 
             } catch (e) {
-                console.error(e);
-                document.body.innerHTML = `<div class="p-8 text-center text-red-500"><h1>Error</h1><p>Failed to load data. Check Firebase connection.</p></div>`;
-                alert("Firebase connection failed.");
+                console.error("Initialization error:", e);
+                document.body.innerHTML = `<p class="text-center p-8 text-red-500">Failed to load application. Check Firebase connection.</p>`;
             }
         });
     </script>
-
 <script type="module" src="/index.tsx"></script>
+
 
 <script src="./script.js"></script></body></html>
